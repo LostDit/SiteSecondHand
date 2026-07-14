@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — SecondHand</title>
+    <style>
+        :root {
+            --bg: #0c0f13;
+            --surface: #161a20;
+            --surface-light: #1e232b;
+            --text: #eef1f5;
+            --text-secondary: #8b929a;
+            --accent: #2dd4bf;
+            --accent-hover: #5ee8d4;
+            --accent-glow: rgba(45, 212, 191, 0.15);
+            --danger: #f87171;
+            --border: #272d35;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --transition: 0.2s ease;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.5;
+            min-height: 100vh; -webkit-font-smoothing: antialiased;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        :focus-visible {
+            outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+        }
+
+        .profile-card {
+            width: 100%; max-width: 1000px;
+            background: var(--surface); border-radius: var(--radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .profile-header {
+            position: relative;
+            padding: 32px 32px 20px;
+            background: linear-gradient(135deg, #1a2a2f 0%, #0f171d 100%);
+            display: flex; flex-wrap: wrap; align-items: center; gap: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .back-link {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,0.05); color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 1.2rem; transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .back-link:hover { background: rgba(255,255,255,0.1); color: var(--accent); }
+        .avatar-section { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 200px; }
+        .avatar {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(145deg, #1e2d33, #151f26);
+            border: 3px solid var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.8rem; color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow); flex-shrink: 0;
+            cursor: pointer; transition: var(--transition);
+        }
+        .avatar:hover { filter: brightness(1.2); }
+        .user-details h1 { font-size: 1.8rem; font-weight: 700; }
+        .user-details p { color: var(--text-secondary); margin: 4px 0; }
+        .stats { display: flex; gap: 24px; margin-left: auto; flex-wrap: wrap; }
+        .stat-item {
+            text-align: center; background: rgba(0,0,0,0.3);
+            border-radius: var(--radius-sm); padding: 12px 18px;
+        }
+        .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+
+        .tabs-container {
+            display: flex; gap: 4px; padding: 12px 24px; background: var(--surface-light);
+            border-bottom: 1px solid var(--border); overflow-x: auto;
+        }
+        .tab {
+            padding: 10px 22px; border-radius: 40px; font-weight: 600;
+            font-size: 0.9rem; cursor: pointer; background: transparent;
+            color: var(--text-secondary); border: none; transition: var(--transition);
+            white-space: nowrap;
+        }
+        .tab:not(.active):hover { background: rgba(255,255,255,0.06); color: var(--text); }
+        .tab.active { background: var(--accent); color: #000; }
+
+        .tab-content { padding: 24px; display: none; animation: fadeSlide 0.3s ease; position: relative; }
+        .tab-content.active { display: block; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-overlay {
+            display: none; position: absolute; inset: 0;
+            align-items: center; justify-content: center;
+            background: var(--surface); z-index: 5;
+        }
+        .tab-content.is-loading .loading-overlay { display: flex; }
+        .tab-content.is-loading > *:not(.loading-overlay) { visibility: hidden; }
+        .spinner-ring {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 3px solid var(--border); border-top-color: var(--accent);
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .product-card-item {
+            background: var(--surface-light); border-radius: var(--radius-sm);
+            padding: 16px; display: flex; gap: 14px; align-items: center;
+            transition: var(--transition); border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .product-card-item:hover { border-color: var(--border); transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.4); }
+        .product-image {
+            width: 80px; height: 80px; border-radius: 10px;
+            background: radial-gradient(circle at 32% 28%, #232b34 0%, #14181e 75%); display: flex; align-items: center;
+            justify-content: center; font-size: 2.4rem; flex-shrink: 0;
+        }
+        .product-info { flex:1; min-width: 0; }
+        .product-info h3 { font-size: 1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .price { font-weight: 700; color: var(--accent); font-size: 1.1rem; }
+        .meta { font-size: 0.8rem; color: var(--text-secondary); }
+        .actions { display: flex; gap: 6px; margin-top: 8px; }
+        .icon-btn {
+            background: transparent; border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 12px; cursor: pointer;
+            color: var(--text-secondary); font-size: 0.9rem; transition: var(--transition);
+            display: flex; align-items: center; gap: 4px;
+        }
+        .icon-btn:hover { background: var(--border); color: #fff; }
+        .icon-btn.danger:hover { background: rgba(248,113,113,0.2); color: var(--danger); }
+
+        .favorites-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+        .fav-card {
+            background: var(--surface-light); border-radius: var(--radius-sm);
+            padding: 14px; text-align: center; transition: var(--transition);
+            border: 1px solid transparent; display: flex; flex-direction: column; gap: 8px;
+            cursor: pointer;
+        }
+        .fav-card:hover { border-color: var(--border); transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.4); }
+        .fav-emoji { font-size: 2.5rem; }
+        .fav-title { font-weight: 600; font-size: 0.9rem; }
+        .fav-price { color: var(--accent); font-weight: 700; }
+        .remove-fav {
+            background: transparent; border: 1px solid var(--border);
+            color: var(--text-secondary); border-radius: 20px; padding: 5px 12px;
+            cursor: pointer; font-size: 0.8rem; margin-top: 4px;
+        }
+        .remove-fav:hover { background: rgba(248,113,113,0.2); color: var(--danger); }
+        .empty-state { color: var(--text-secondary); grid-column: 1 / -1; text-align: center; padding: 24px 0; }
+
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); }
+        .form-group input {
+            padding: 12px 14px; border: 2px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--surface-light);
+            color: var(--text); outline: none; font-size: 0.95rem;
+        }
+        .save-btn {
+            grid-column: span 2; justify-self: start;
+            padding: 12px 28px; background: var(--accent); color: #000;
+            border: none; border-radius: 40px; font-weight: 700; cursor: pointer;
+        }
+        .logout-section { display: flex; justify-content: flex-end; padding: 0 24px 24px; }
+        .btn-logout {
+            background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3);
+            color: var(--danger); padding: 10px 22px; border-radius: 40px;
+            font-weight: 600; cursor: pointer;
+        }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 14px; border-radius:50px; font-size:0.9rem; font-weight:600; cursor:pointer; border:none; text-decoration:none; background:var(--surface-light); color:var(--text); }
+        .btn--accent { background:var(--accent); color:#000; }
+        .btn--outline { background:transparent; border:2px solid var(--border); color:var(--text); }
+        .btn--danger { background: rgba(248,113,113,0.15); color: var(--danger); border:1px solid rgba(248,113,113,0.3); }
+
+        .modal-overlay {
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
+            z-index:1000; display:flex; align-items:center; justify-content:center;
+            opacity:0; visibility:hidden; transition:0.2s;
+        }
+        .modal-overlay.active { opacity:1; visibility:visible; }
+        .modal {
+            background:var(--surface); border-radius:var(--radius); padding:28px;
+            max-width:500px; width:90%; max-height:90vh; overflow-y:auto;
+            box-shadow:0 20px 40px rgba(0,0,0,0.6); position:relative;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalPop {
+            from { opacity:0; transform:scale(0.92) translateY(20px); }
+            to { opacity:1; transform:scale(1) translateY(0); }
+        }
+        .modal__close {
+            position:absolute; top:16px; right:16px; width:36px; height:36px;
+            border-radius:50%; border:none; background:var(--surface-light);
+            color:var(--text-secondary); font-size:1.2rem; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .modal__image { font-size:5rem; text-align:center; margin-bottom:16px; background:#1a1f26; border-radius:var(--radius-sm); padding:20px; }
+        .modal__price { font-size:1.8rem; font-weight:700; color:var(--accent); }
+        .modal__title { font-size:1.3rem; font-weight:600; margin:8px 0; }
+        .modal__meta { color:var(--text-secondary); margin-bottom:16px; }
+        .modal__actions { display:flex; gap:12px; flex-wrap:wrap; }
+        .modal__actions .btn { flex:1; }
+        .product-card__badge { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: rgba(45,212,191,0.15); color: var(--accent); }
+        .product-card__badge--used { background: rgba(255,193,7,0.15); color: #ffc107; }
+
+        .confirm-modal { max-width: 360px; text-align: center; }
+        .confirm-modal__icon { font-size: 2.4rem; margin-bottom: 10px; }
+        .confirm-modal__title { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+        .confirm-modal__message { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+        .confirm-modal__actions { display: flex; gap: 10px; }
+        .confirm-modal__actions .btn { flex: 1; }
+
+        @media (max-width: 700px) {
+            .profile-header { flex-direction: column; align-items: flex-start; }
+            .stats { margin-left: 0; width: 100%; justify-content: space-around; }
+            .settings-grid { grid-template-columns: 1fr; }
+            .save-btn { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        <div class="profile-header">
+            <a href="index.html" class="back-link" title="На главную">←</a>
+            <div class="avatar-section">
+                <div class="avatar" id="avatarPreview" title="Сменить фото">👤</div>
+                <div class="user-details">
+                    <h1>Алексей Смирнов</h1>
+                    <p>alex@example.com</p>
+                    <p>⭐ 4.9 • На сайте с 2023</p>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-item"><div class="stat-number" id="myProductsCount">0</div><div class="stat-label">товаров</div></div>
+                <div class="stat-item"><div class="stat-number" id="favCount">0</div><div class="stat-label">в избранном</div></div>
+                <div class="stat-item"><div class="stat-number">1.2k</div><div class="stat-label">просмотров</div></div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab active" data-tab="products">📦 Мои объявления</button>
+            <button class="tab" data-tab="favorites">❤️ Избранное</button>
+            <button class="tab" data-tab="settings">⚙️ Настройки</button>
+        </div>
+
+        <div class="tab-content active" id="products-content">
+            <div class="loading-overlay"><div class="spinner-ring"></div></div>
+            <div class="product-grid" id="myProductsGrid"></div>
+        </div>
+        <div class="tab-content" id="favorites-content">
+            <div class="loading-overlay"><div class="spinner-ring"></div></div>
+            <div class="favorites-grid" id="favoritesGrid"></div>
+        </div>
+        <div class="tab-content" id="settings-content">
+            <div class="settings-grid">
+                <div class="form-group"><label>Имя</label><input type="text" value="Алексей Смирнов"></div>
+                <div class="form-group"><label>Email</label><input type="email" value="alex@example.com"></div>
+                <div class="form-group"><label>Город</label><input type="text" value="Москва"></div>
+                <div class="form-group"><label>Новый пароль</label><input type="password" placeholder="Оставьте пустым"></div>
+                <button class="save-btn" onclick="alert('Изменения сохранены (демо)')">💾 Сохранить</button>
+            </div>
+        </div>
+
+        <div class="logout-section">
+            <button class="btn-logout" id="logoutBtn">🚪 Выйти из аккаунта</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-label="Детали товара">
+        <div class="modal">
+            <button class="modal__close" id="closeModalBtn" aria-label="Закрыть">✕</button>
+            <div class="modal__image" id="modalImage">📱</div>
+            <div class="modal__price" id="modalPrice"></div>
+            <div class="modal__title" id="modalTitle"></div>
+            <div class="modal__meta" id="modalMeta"></div>
+            <p id="modalDescription" style="margin-bottom:16px; color:var(--text-secondary);"></p>
+            <div class="modal__actions" id="modalActions"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-label="Подтверждение">
+        <div class="modal confirm-modal">
+            <div class="confirm-modal__icon" id="confirmIcon">❓</div>
+            <div class="confirm-modal__title" id="confirmTitle">Вы уверены?</div>
+            <div class="confirm-modal__message" id="confirmMessage"></div>
+            <div class="confirm-modal__actions">
+                <button class="btn btn--outline" id="confirmCancelBtn">Отмена</button>
+                <button class="btn btn--danger" id="confirmOkBtn">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const conditions = ['Новое', 'Б/У'];
+            const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
+            const categories = ['Электроника', 'Одежда и обувь', 'Мебель', 'Детские товары', 'Спорт и отдых', 'Книги', 'Для дома'];
+            const productNames = ['iPhone 13 Pro', 'Велосипед Stels', 'Диван угловой', 'Наушники Sony', 'Коляска Babyzen', 'Кроссовки Nike', 'Стол ИКЕА', 'Камера Canon', 'Книга Властелин колец', 'Гитара Yamaha', 'Пылесос Dyson', 'Куртка зимняя', 'Монитор LG', 'Кофемашина DeLonghi', 'Рюкзак Herschel'];
+            const allProducts = [];
+            for (let i = 1; i <= 60; i++) {
+                allProducts.push({
+                    id: i,
+                    title: productNames[i % productNames.length] + ' ' + (i % 10 + 1),
+                    price: Math.floor(Math.random() * 90000 + 1000),
+                    image: ['📱','🚲','🛋️','🎧','👶','👟','🪑','📷','📖','🎸','🧹','🧥'][i % 12],
+                    location: locations[i % locations.length],
+                    condition: conditions[i % 2],
+                    category: categories[i % categories.length],
+                    description: 'Отличное состояние, полный комплект. Возможен небольшой торг.',
+                    favorite: false
+                });
+            }
+
+            function loadFavorites() {
+                const saved = localStorage.getItem('secondhand_favorites');
+                if (saved) {
+                    const favIds = JSON.parse(saved);
+                    allProducts.forEach(p => { p.favorite = favIds.includes(p.id); });
+                }
+            }
+            function saveFavorites() {
+                const favIds = allProducts.filter(p => p.favorite).map(p => p.id);
+                localStorage.setItem('secondhand_favorites', JSON.stringify(favIds));
+            }
+            loadFavorites();
+
+            // ---------- Confirm-модалка (замена confirm()) ----------
+            const confirmModal = document.getElementById('confirmModal');
+            const confirmIcon = document.getElementById('confirmIcon');
+            const confirmTitleEl = document.getElementById('confirmTitle');
+            const confirmMessageEl = document.getElementById('confirmMessage');
+            const confirmOkBtn = document.getElementById('confirmOkBtn');
+            const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+            let confirmCallback = null;
+
+            function showConfirm({ icon = '❓', title, message, okText = 'Подтвердить', onConfirm }) {
+                confirmIcon.textContent = icon;
+                confirmTitleEl.textContent = title;
+                confirmMessageEl.textContent = message || '';
+                confirmOkBtn.textContent = okText;
+                confirmCallback = onConfirm;
+                confirmModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeConfirm() {
+                confirmModal.classList.remove('active');
+                document.body.style.overflow = '';
+                confirmCallback = null;
+            }
+            confirmCancelBtn.addEventListener('click', closeConfirm);
+            confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
+            confirmOkBtn.addEventListener('click', () => {
+                const cb = confirmCallback;
+                closeConfirm();
+                if (cb) cb();
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                showConfirm({
+                    icon: '🚪',
+                    title: 'Выйти из аккаунта?',
+                    message: 'Чтобы вернуться в профиль, нужно будет войти снова.',
+                    okText: 'Выйти',
+                    onConfirm: () => { window.location.href = 'index.html'; }
+                });
+            });
+
+            // ---------- Мои объявления (динамически, хранятся в localStorage) ----------
+            const MY_PRODUCTS_KEY = 'secondhand_myproducts';
+            function getMyProductIds() {
+                const saved = localStorage.getItem(MY_PRODUCTS_KEY);
+                if (saved) return JSON.parse(saved);
+                const defaults = [3, 7, 12, 18, 25, 31, 44, 52];
+                localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(defaults));
+                return defaults;
+            }
+            function saveMyProductIds(ids) {
+                localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(ids));
+            }
+
+            const myGrid = document.getElementById('myProductsGrid');
+
+            function renderMyProducts() {
+                const ids = getMyProductIds();
+                const myProducts = allProducts.filter(p => ids.includes(p.id));
+                document.getElementById('myProductsCount').textContent = myProducts.length;
+                myGrid.innerHTML = myProducts.length ? myProducts.map(p => `
+                    <div class="product-card-item" data-id="${p.id}">
+                        <div class="product-image">${p.image}</div>
+                        <div class="product-info">
+                            <h3>${p.title}</h3>
+                            <div class="price">${p.price.toLocaleString()} ₽</div>
+                            <div class="meta">${p.location} • ${p.condition}</div>
+                            <div class="actions">
+                                <button class="icon-btn" data-action="edit" data-id="${p.id}">✏️ Изменить</button>
+                                <button class="icon-btn danger" data-action="remove" data-id="${p.id}">🗑️ Снять</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : `<p class="empty-state">У вас пока нет активных объявлений.</p>`;
+            }
+
+            function removeMyProduct(id) {
+                const product = allProducts.find(p => p.id === id);
+                showConfirm({
+                    icon: '🗑️',
+                    title: 'Снять объявление?',
+                    message: product ? `«${product.title}» будет скрыто из ваших объявлений.` : 'Объявление будет скрыто из списка.',
+                    okText: 'Снять',
+                    onConfirm: () => {
+                        const ids = getMyProductIds().filter(pid => pid !== id);
+                        saveMyProductIds(ids);
+                        renderMyProducts();
+                    }
+                });
+            }
+
+            myGrid.addEventListener('click', (e) => {
+                const removeBtn = e.target.closest('[data-action="remove"]');
+                if (removeBtn) { e.stopPropagation(); removeMyProduct(+removeBtn.dataset.id); return; }
+
+                const editBtn = e.target.closest('[data-action="edit"]');
+                if (editBtn) {
+                    e.stopPropagation();
+                    const product = allProducts.find(p => p.id === +editBtn.dataset.id);
+                    if (product) openProductModal(product, 'own');
+                    return;
+                }
+
+                const card = e.target.closest('.product-card-item');
+                if (card) {
+                    const product = allProducts.find(p => p.id === +card.dataset.id);
+                    if (product) openProductModal(product, 'own');
+                }
+            });
+
+            // ---------- Избранное ----------
+            const favGrid = document.getElementById('favoritesGrid');
+
+            function renderFavorites() {
+                const currentFavIds = JSON.parse(localStorage.getItem('secondhand_favorites') || '[]');
+                const favs = allProducts.filter(p => currentFavIds.includes(p.id));
+                document.getElementById('favCount').textContent = favs.length;
+                favGrid.innerHTML = favs.length ? favs.map(p => `
+                    <div class="fav-card" data-id="${p.id}">
+                        <div class="fav-emoji">${p.image}</div>
+                        <div class="fav-title">${p.title}</div>
+                        <div class="fav-price">${p.price.toLocaleString()} ₽</div>
+                        <button class="remove-fav" data-id="${p.id}">Убрать</button>
+                    </div>
+                `).join('') : `<p class="empty-state">Пока нет избранных товаров.</p>`;
+            }
+
+            favGrid.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-fav')) {
+                    e.stopPropagation();
+                    const id = +e.target.dataset.id;
+                    let favs = JSON.parse(localStorage.getItem('secondhand_favorites') || '[]');
+                    favs = favs.filter(fid => fid !== id);
+                    localStorage.setItem('secondhand_favorites', JSON.stringify(favs));
+                    const prod = allProducts.find(p => p.id === id);
+                    if (prod) prod.favorite = false;
+                    renderFavorites();
+                    return;
+                }
+                const card = e.target.closest('.fav-card');
+                if (card) {
+                    const product = allProducts.find(p => p.id === +card.dataset.id);
+                    if (product) openProductModal(product, 'public');
+                }
+            });
+
+            // ---------- Общее модальное окно товара (как на главной) ----------
+            const modalOverlay = document.getElementById('productModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalPrice = document.getElementById('modalPrice');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMeta = document.getElementById('modalMeta');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalActions = document.getElementById('modalActions');
+            let currentModalProduct = null;
+
+            function openProductModal(product, context = 'public') {
+                if (!product) return; // защита от пустого товара
+                currentModalProduct = product;
+                modalImage.textContent = product.image;
+                modalPrice.textContent = product.price.toLocaleString() + ' ₽';
+                modalTitle.textContent = product.title;
+                modalMeta.innerHTML = `<span class="product-card__badge ${product.condition==='Б/У'?'product-card__badge--used':''}">${product.condition}</span> 📍 ${product.location}`;
+                modalDescription.textContent = product.description;
+
+                modalActions.innerHTML = context === 'own' ? `
+                    <button class="btn btn--accent" data-action="edit-stub">✏️ Редактировать</button>
+                    <button class="btn btn--outline" data-action="remove-own">🗑️ Снять с продажи</button>
+                    <button class="btn btn--outline" data-action="share">🔗 Поделиться</button>
+                ` : `
+                    <button class="btn btn--accent" data-action="contact">📞 Связаться</button>
+                    <button class="btn btn--outline" data-action="favorite">${product.favorite ? '❤️ В избранном' : '🤍 В избранное'}</button>
+                    <button class="btn btn--outline" data-action="share">🔗 Поделиться</button>
+                `;
+
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                document.getElementById('closeModalBtn').focus();
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+                currentModalProduct = null;
+            }
+
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+            modalActions.addEventListener('click', (e) => {
+                if (!currentModalProduct) return;
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                const action = btn.dataset.action;
+
+                if (action === 'favorite') {
+                    currentModalProduct.favorite = !currentModalProduct.favorite;
+                    btn.textContent = currentModalProduct.favorite ? '❤️ В избранном' : '🤍 В избранное';
+                    saveFavorites();
+                    renderFavorites();
+                } else if (action === 'contact') {
+                    alert('Функция связи с продавцом появится позже (демо)');
+                } else if (action === 'share') {
+                    alert('Ссылка скопирована (демо)');
+                } else if (action === 'edit-stub') {
+                    alert('Редактирование объявления появится позже (демо)');
+                } else if (action === 'remove-own') {
+                    const id = currentModalProduct.id;
+                    closeModal();
+                    removeMyProduct(id);
+                }
+            });
+
+            // ---------- Аватар ----------
+            document.getElementById('avatarPreview').addEventListener('click', () => alert('Смена фото появится позже (демо)'));
+
+            // ---------- Переключение вкладок с индикатором загрузки ----------
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.classList.contains('active')) return;
+                    const target = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    contents.forEach(c => c.classList.remove('active', 'is-loading'));
+                    const targetContent = document.getElementById(target + '-content');
+
+                    if (target === 'products' || target === 'favorites') {
+                        targetContent.classList.add('active', 'is-loading');
+                        setTimeout(() => {
+                            if (target === 'products') renderMyProducts();
+                            if (target === 'favorites') renderFavorites();
+                            targetContent.classList.remove('is-loading');
+                        }, 280);
+                    } else {
+                        targetContent.classList.add('active');
+                    }
+                });
+            });
+
+            // ---------- Escape закрывает открытую модалку ----------
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (confirmModal.classList.contains('active')) closeConfirm();
+                    else if (modalOverlay.classList.contains('active')) closeModal();
+                }
+            });
+
+            // ---------- Первичный рендер ----------
+            renderMyProducts();
+            renderFavorites();
+        })();
+    </script>
+</body>
+</html>

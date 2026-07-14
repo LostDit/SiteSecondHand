@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecondHand — Современная доска объявлений</title>
+    <style>
+        :root {
+            --bg: #0c0f13;
+            --surface: #161a20;
+            --surface-light: #1e232b;
+            --text: #eef1f5;
+            --text-secondary: #8b929a;
+            --accent: #2dd4bf;
+            --accent-hover: #5ee8d4;
+            --accent-glow: rgba(45, 212, 191, 0.15);
+            --danger: #f87171;
+            --border: #272d35;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --transition: 0.2s ease;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.5;
+            min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+        }
+        :focus-visible {
+            outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+        }
+
+        .floating-trigger {
+            position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+            z-index: 300; width: 50px; height: 50px; border-radius: 50%;
+            background: var(--surface); border: 2px solid var(--border);
+            color: var(--text); font-size: 1.4rem; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transition: background 0.2s, border-color 0.2s, right 0.3s cubic-bezier(0.4,0,0.2,1);
+            backdrop-filter: blur(8px); user-select: none;
+        }
+        .floating-trigger:hover { background: var(--surface-light); border-color: var(--accent); }
+        .floating-trigger.shifted { right: calc(320px + 20px); }
+
+        .layout { display: flex; min-height: 100vh; max-width: 1440px; margin: 0 auto; }
+
+        .main-content { flex: 1; padding: 24px 20px 20px 24px; min-width: 0; display: flex; flex-direction: column; }
+
+        .main-top { margin-bottom: 20px; }
+        .search-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .search-wrapper { flex: 1; position: relative; min-width: 240px; }
+        .search-wrapper input {
+            width: 100%; padding: 10px 16px 10px 42px; border: 2px solid var(--border);
+            border-radius: 50px; font-size: 0.95rem; outline: none;
+            background: var(--surface-light); color: var(--text); transition: var(--transition);
+        }
+        .search-wrapper input:focus { border-color: var(--accent); }
+        .search-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-secondary); font-size: 1.1rem;
+        }
+        .inline-trigger {
+            background: var(--surface-light); border: 2px solid var(--border);
+            border-radius: 50px; padding: 10px 16px; color: var(--text);
+            cursor: pointer; font-size: 1.3rem; display: flex; align-items: center;
+            transition: var(--transition); text-decoration: none;
+        }
+        .inline-trigger:hover { background: var(--border); border-color: var(--accent); }
+        .main-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .main-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.3px; }
+        .sort-select {
+            padding: 9px 30px 9px 14px; border: 2px solid var(--border);
+            border-radius: 50px; font-size: 0.9rem; background: var(--surface-light);
+            color: var(--text); cursor: pointer; outline: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a0a8b4' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; flex: 1; align-content: start; }
+        .product-card {
+            background: var(--surface); border-radius: var(--radius); overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s;
+            cursor: pointer; display: flex; flex-direction: column; border: 1px solid transparent;
+        }
+        .product-card:hover { transform: translateY(-4px); border-color: var(--border); box-shadow: 0 14px 30px rgba(0,0,0,0.45); }
+        .product-card__image { position: relative; width: 100%; aspect-ratio: 4/3; background: radial-gradient(circle at 32% 28%, #232b34 0%, #14181e 75%); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+        .product-card__favorite {
+            position: absolute; top: 10px; right: 10px; width: 34px; height: 34px;
+            border-radius: 50%; background: rgba(0,0,0,0.7); border: none;
+            cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
+            justify-content: center; transition: var(--transition); backdrop-filter: blur(4px);
+            color: #ccc; z-index: 2;
+        }
+        .product-card__favorite:hover { background: #000; color: #ff4d6d; }
+        .product-card__favorite--active { color: #ff4d6d; }
+        .product-card__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .product-card__price { font-size: 1.25rem; font-weight: 700; }
+        .product-card__title { font-size: 0.9rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-card__meta { font-size: 0.78rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .product-card__badge { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: rgba(45,212,191,0.15); color: var(--accent); }
+        .product-card__badge--used { background: rgba(255,193,7,0.15); color: #ffc107; }
+        .sentinel { text-align: center; padding: 28px 0; color: var(--text-secondary); grid-column: 1 / -1; }
+
+        .sidebar-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:250; opacity:0; visibility:hidden; transition:0.3s; }
+        .sidebar-overlay.active { opacity:1; visibility:visible; }
+        .sidebar {
+            position: fixed; top:0; right:0; height:100vh; width:320px; max-width:90vw;
+            background: var(--surface); box-shadow:-8px 0 24px rgba(0,0,0,0.6);
+            z-index:260; transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column; overflow-y: auto; padding:24px 18px; gap:18px;
+        }
+        .sidebar.active { transform: translateX(0); }
+        .sidebar__brand { display: flex; align-items: center; gap:10px; font-size:1.4rem; font-weight:700; }
+        .sidebar__logo-icon { width:40px; height:40px; background:var(--accent); border-radius:12px; display:flex; align-items:center; justify-content:center; color:#000; font-weight:800; font-size:1.2rem; }
+        .sidebar__close { position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%; border:none; background:var(--surface-light); color:var(--text-secondary); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .sidebar__close:hover { background:var(--border); color:#fff; }
+        .btn { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px 14px; border-radius:50px; font-size:0.9rem; font-weight:600; cursor:pointer; border:none; transition:var(--transition); text-decoration:none; white-space:nowrap; width:100%; box-sizing:border-box; background:var(--surface-light); color:var(--text); }
+        .btn--accent { background:var(--accent); color:#000; }
+        .btn--accent:hover { background:var(--accent-hover); }
+        .btn--outline { background:transparent; border:2px solid var(--border); }
+        .sidebar__block { background:var(--surface-light); border-radius:var(--radius); padding:16px; }
+        .sidebar__block-title { font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+        .sidebar__list { list-style:none; display:flex; flex-direction:column; gap:2px; }
+        .sidebar__list li a { display:block; padding:8px 10px; border-radius:var(--radius-sm); text-decoration:none; color:var(--text-secondary); font-size:0.88rem; }
+        .sidebar__list li a:hover, .sidebar__list li a.active { background:rgba(45,212,191,0.1); color:var(--accent); font-weight:600; }
+        .price-range { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+        .price-range input { flex:1; padding:8px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:0.85rem; outline:none; text-align:center; background:var(--surface); color:var(--text); }
+        .checkbox-label { display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer; padding:4px 0; color:var(--text-secondary); }
+        .sidebar__reset { font-size:0.8rem; color:var(--accent); background:none; border:none; font-weight:600; cursor:pointer; margin-top:6px; text-decoration:underline; }
+
+        .modal-overlay {
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
+            z-index:1000; display:flex; align-items:center; justify-content:center;
+            opacity:0; visibility:hidden; transition:0.2s;
+        }
+        .modal-overlay.active { opacity:1; visibility:visible; }
+        .modal {
+            background:var(--surface); border-radius:var(--radius); padding:28px;
+            max-width:500px; width:90%; max-height:90vh; overflow-y:auto;
+            box-shadow:0 20px 40px rgba(0,0,0,0.6); position:relative;
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalPop {
+            from { opacity:0; transform:scale(0.92) translateY(20px); }
+            to { opacity:1; transform:scale(1) translateY(0); }
+        }
+        .modal__close {
+            position:absolute; top:16px; right:16px; width:36px; height:36px;
+            border-radius:50%; border:none; background:var(--surface-light);
+            color:var(--text-secondary); font-size:1.2rem; cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+        }
+        .modal__image { font-size:5rem; text-align:center; margin-bottom:16px; background:#1a1f26; border-radius:var(--radius-sm); padding:20px; }
+        .modal__price { font-size:1.8rem; font-weight:700; color:var(--accent); }
+        .modal__title { font-size:1.3rem; font-weight:600; margin:8px 0; }
+        .modal__meta { color:var(--text-secondary); margin-bottom:16px; }
+        .modal__actions { display:flex; gap:12px; flex-wrap:wrap; }
+        .modal__actions .btn { flex:1; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <main class="main-content">
+            <div class="main-top">
+                <div class="search-row">
+                    <div class="search-wrapper">
+                        <span class="search-icon" aria-hidden="true">🔍</span>
+                        <input type="text" placeholder="Поиск по объявлениям..." id="searchInput" aria-label="Поиск товаров">
+                    </div>
+                    <a href="profile.html" class="inline-trigger" aria-label="Личный кабинет" title="Личный кабинет">👤</a>
+                    <button class="inline-trigger" id="inlineOpenBtn" aria-label="Открыть фильтры" title="Фильтры">⚙️</button>
+                </div>
+                <div class="main-header">
+                    <h1 class="main-title">Все объявления</h1>
+                    <select class="sort-select" id="sortSelect" aria-label="Сортировка">
+                        <option>Сначала новые</option>
+                        <option>Сначала дешёвые</option>
+                        <option>Сначала дорогие</option>
+                    </select>
+                </div>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+            <div class="sentinel" id="sentinel">Загрузка новых объявлений...</div>
+        </main>
+
+        <div class="floating-trigger" id="floatingTrigger" aria-label="Открыть панель управления" title="Панель">⚙️</div>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <aside class="sidebar" id="sidebar" aria-label="Боковая панель">
+            <button class="sidebar__close" id="closeSidebarBtn" aria-label="Закрыть панель">✕</button>
+            <div class="sidebar__brand">
+                <div class="sidebar__logo-icon">SH</div> SecondHand
+            </div>
+            <div class="sidebar__actions">
+                <button class="btn btn--accent">+ Подать объявление</button>
+                <a href="profile.html" class="btn btn--outline">♡ Избранное</a>
+                <button class="btn btn--outline">🔔 Уведомления <span class="badge" style="margin-left:auto; background:#e74c3c; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">3</span></button>
+            </div>
+            <div class="sidebar__block">
+                <div class="sidebar__block-title">📂 Категории</div>
+                <ul class="sidebar__list" id="categoryList">
+                    <li><a href="#" class="active" data-category="all">Все товары</a></li>
+                    <li><a href="#" data-category="Электроника">Электроника</a></li>
+                    <li><a href="#" data-category="Одежда и обувь">Одежда и обувь</a></li>
+                    <li><a href="#" data-category="Мебель">Мебель</a></li>
+                    <li><a href="#" data-category="Детские товары">Детские товары</a></li>
+                    <li><a href="#" data-category="Спорт и отдых">Спорт и отдых</a></li>
+                    <li><a href="#" data-category="Книги">Книги</a></li>
+                    <li><a href="#" data-category="Для дома">Для дома</a></li>
+                </ul>
+            </div>
+            <div class="sidebar__block">
+                <div class="sidebar__block-title">💰 Цена, ₽</div>
+                <div class="price-range">
+                    <input type="number" placeholder="От" id="priceFrom" value="0" aria-label="Цена от">
+                    <span>—</span>
+                    <input type="number" placeholder="До" id="priceTo" value="150000" aria-label="Цена до">
+                </div>
+                <button class="btn btn--accent" id="applyPriceBtn">Применить</button>
+            </div>
+            <div class="sidebar__block">
+                <div class="sidebar__block-title">📦 Состояние</div>
+                <label class="checkbox-label"><input type="checkbox" id="filterNew" checked> Новое</label>
+                <label class="checkbox-label"><input type="checkbox" id="filterUsed" checked> Б/У</label>
+                <button class="sidebar__reset" id="resetFiltersBtn">Сбросить все фильтры</button>
+            </div>
+            <div class="sidebar__block">
+                <div class="sidebar__block-title">📍 Город</div>
+                <select class="sort-select" id="citySelect" style="width:100%;" aria-label="Выбор города">
+                    <option value="all">Все города</option>
+                    <option>Москва</option>
+                    <option>Санкт-Петербург</option>
+                    <option>Казань</option>
+                    <option>Екатеринбург</option>
+                    <option>Новосибирск</option>
+                </select>
+            </div>
+        </aside>
+    </div>
+
+    <div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-label="Детали товара">
+        <div class="modal">
+            <button class="modal__close" id="closeModalBtn" aria-label="Закрыть">✕</button>
+            <div class="modal__image" id="modalImage">📱</div>
+            <div class="modal__price" id="modalPrice"></div>
+            <div class="modal__title" id="modalTitle"></div>
+            <div class="modal__meta" id="modalMeta"></div>
+            <p id="modalDescription" style="margin-bottom:16px; color:var(--text-secondary);"></p>
+            <div class="modal__actions">
+                <button class="btn btn--accent" id="contactSellerBtn">📞 Связаться</button>
+                <button class="btn btn--outline" id="modalFavoriteBtn">❤️ В избранное</button>
+                <button class="btn btn--outline" id="shareBtn">🔗 Поделиться</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const conditions = ['Новое', 'Б/У'];
+            const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
+            const categories = ['Электроника', 'Одежда и обувь', 'Мебель', 'Детские товары', 'Спорт и отдых', 'Книги', 'Для дома'];
+            const productNames = ['iPhone 13 Pro', 'Велосипед Stels', 'Диван угловой', 'Наушники Sony', 'Коляска Babyzen', 'Кроссовки Nike', 'Стол ИКЕА', 'Камера Canon', 'Книга Властелин колец', 'Гитара Yamaha', 'Пылесос Dyson', 'Куртка зимняя', 'Монитор LG', 'Кофемашина DeLonghi', 'Рюкзак Herschel'];
+            const allProducts = [];
+            for (let i = 1; i <= 60; i++) {
+                allProducts.push({
+                    id: i,
+                    title: productNames[i % productNames.length] + ' ' + (i % 10 + 1),
+                    price: Math.floor(Math.random() * 90000 + 1000),
+                    image: ['📱','🚲','🛋️','🎧','👶','👟','🪑','📷','📖','🎸','🧹','🧥'][i % 12],
+                    location: locations[i % locations.length],
+                    condition: conditions[i % 2],
+                    category: categories[i % categories.length],
+                    description: 'Отличное состояние, полный комплект. Возможен небольшой торг. Причина продажи — покупка новой модели.',
+                    favorite: false
+                });
+            }
+
+            // localStorage для избранного
+            function loadFavorites() {
+                const saved = localStorage.getItem('secondhand_favorites');
+                if (saved) {
+                    const favIds = JSON.parse(saved);
+                    allProducts.forEach(p => { p.favorite = favIds.includes(p.id); });
+                }
+            }
+            function saveFavorites() {
+                const favIds = allProducts.filter(p => p.favorite).map(p => p.id);
+                localStorage.setItem('secondhand_favorites', JSON.stringify(favIds));
+            }
+            loadFavorites();
+
+            let currentCategory = 'all', priceFrom = 0, priceTo = 150000, showNew = true, showUsed = true, selectedCity = 'all', sortMode = 'new';
+            const grid = document.getElementById('productsGrid');
+            const sentinel = document.getElementById('sentinel');
+
+            function getFilteredProducts() {
+                return allProducts.filter(p => {
+                    if (currentCategory !== 'all' && p.category !== currentCategory) return false;
+                    if (p.price < priceFrom || p.price > priceTo) return false;
+                    if (p.condition === 'Новое' && !showNew) return false;
+                    if (p.condition === 'Б/У' && !showUsed) return false;
+                    if (selectedCity !== 'all' && p.location !== selectedCity) return false;
+                    return true;
+                }).sort((a,b) => {
+                    if (sortMode === 'cheap') return a.price - b.price;
+                    if (sortMode === 'expensive') return b.price - a.price;
+                    return b.id - a.id;
+                });
+            }
+
+            const ITEMS_PER_PAGE = 8;
+            let currentPage = 0, filteredList = [], isLoading = false, endReached = false;
+
+            function resetAndLoad() {
+                grid.innerHTML = '';
+                currentPage = 0; endReached = false;
+                filteredList = getFilteredProducts();
+                sentinel.style.display = 'block';
+                sentinel.textContent = 'Загрузка новых объявлений...';
+                loadMore();
+            }
+
+            function loadMore() {
+                if (isLoading || endReached) return;
+                isLoading = true;
+                sentinel.textContent = 'Загрузка...';
+                setTimeout(() => {
+                    const chunk = filteredList.slice(currentPage * ITEMS_PER_PAGE, (currentPage+1)*ITEMS_PER_PAGE);
+                    if (!chunk.length) {
+                        endReached = true;
+                        sentinel.textContent = 'Вы просмотрели все объявления 🎉';
+                        isLoading = false;
+                        return;
+                    }
+                    grid.insertAdjacentHTML('beforeend', chunk.map(p => `
+                        <div class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.title}, цена ${p.price} рублей">
+                            <div class="product-card__image">${p.image}</div>
+                            <button class="product-card__favorite ${p.favorite?'product-card__favorite--active':''}" data-action="favorite" data-id="${p.id}" aria-label="${p.favorite ? 'Удалить из избранного' : 'Добавить в избранное'}">${p.favorite?'❤️':'🤍'}</button>
+                            <div class="product-card__body">
+                                <div class="product-card__price">${p.price.toLocaleString()} ₽</div>
+                                <div class="product-card__title">${p.title}</div>
+                                <div class="product-card__meta">
+                                    <span class="product-card__badge ${p.condition==='Б/У'?'product-card__badge--used':''}">${p.condition}</span>
+                                    <span>📍 ${p.location}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join(''));
+                    currentPage++;
+                    isLoading = false;
+                    sentinel.textContent = (currentPage * ITEMS_PER_PAGE >= filteredList.length) ? 'Вы просмотрели все объявления 🎉' : 'Загрузка новых объявлений...';
+                    if (currentPage * ITEMS_PER_PAGE >= filteredList.length) endReached = true;
+                }, 400);
+            }
+
+            const observer = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting && !isLoading && !endReached) loadMore();
+            }, { rootMargin: '120px' });
+            observer.observe(sentinel);
+
+            grid.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="favorite"]');
+                if (btn) {
+                    e.stopPropagation();
+                    const id = +btn.dataset.id;
+                    const prod = allProducts.find(p => p.id === id);
+                    if (prod) {
+                        prod.favorite = !prod.favorite;
+                        btn.innerHTML = prod.favorite ? '❤️' : '🤍';
+                        btn.classList.toggle('product-card__favorite--active', prod.favorite);
+                        btn.setAttribute('aria-label', prod.favorite ? 'Удалить из избранного' : 'Добавить в избранное');
+                        saveFavorites();
+                    }
+                    return;
+                }
+                const card = e.target.closest('.product-card');
+                if (card) {
+                    const id = +card.dataset.id;
+                    const product = allProducts.find(p => p.id === id);
+                    if (product) openProductModal(product);
+                }
+            });
+
+            const modalOverlay = document.getElementById('productModal');
+            const modalImage = document.getElementById('modalImage');
+            const modalPrice = document.getElementById('modalPrice');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMeta = document.getElementById('modalMeta');
+            const modalDescription = document.getElementById('modalDescription');
+            const modalFavoriteBtn = document.getElementById('modalFavoriteBtn');
+            let currentModalProduct = null;
+
+            function openProductModal(product) {
+                if (!product) return; // защита: не открываем модалку без товара
+                currentModalProduct = product;
+                modalImage.textContent = product.image;
+                modalPrice.textContent = product.price.toLocaleString() + ' ₽';
+                modalTitle.textContent = product.title;
+                modalMeta.innerHTML = `<span class="product-card__badge ${product.condition==='Б/У'?'product-card__badge--used':''}">${product.condition}</span> 📍 ${product.location}`;
+                modalDescription.textContent = product.description;
+                modalFavoriteBtn.textContent = product.favorite ? '❤️ В избранном' : '🤍 Добавить в избранное';
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                document.getElementById('closeModalBtn').focus();
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+                currentModalProduct = null;
+            }
+
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+            modalFavoriteBtn.addEventListener('click', () => {
+                if (currentModalProduct) {
+                    currentModalProduct.favorite = !currentModalProduct.favorite;
+                    modalFavoriteBtn.textContent = currentModalProduct.favorite ? '❤️ В избранном' : '🤍 Добавить в избранное';
+                    const favBtn = document.querySelector(`.product-card__favorite[data-id="${currentModalProduct.id}"]`);
+                    if (favBtn) {
+                        favBtn.innerHTML = currentModalProduct.favorite ? '❤️' : '🤍';
+                        favBtn.classList.toggle('product-card__favorite--active', currentModalProduct.favorite);
+                    }
+                    saveFavorites();
+                }
+            });
+            document.getElementById('contactSellerBtn').addEventListener('click', () => alert('Функция связи с продавцом появится позже (демо)'));
+            document.getElementById('shareBtn').addEventListener('click', () => alert('Ссылка скопирована (демо)'));
+
+            function applyAllFilters() { resetAndLoad(); }
+            document.getElementById('categoryList').addEventListener('click', e => {
+                e.preventDefault();
+                const link = e.target.closest('a');
+                if (!link) return;
+                document.querySelectorAll('#categoryList a').forEach(a => a.classList.remove('active'));
+                link.classList.add('active');
+                currentCategory = link.dataset.category;
+                applyAllFilters();
+            });
+            document.getElementById('applyPriceBtn').addEventListener('click', () => {
+                priceFrom = +document.getElementById('priceFrom').value || 0;
+                priceTo = +document.getElementById('priceTo').value || Infinity;
+                applyAllFilters();
+            });
+            document.getElementById('filterNew').addEventListener('change', e => { showNew = e.target.checked; applyAllFilters(); });
+            document.getElementById('filterUsed').addEventListener('change', e => { showUsed = e.target.checked; applyAllFilters(); });
+            document.getElementById('citySelect').addEventListener('change', e => { selectedCity = e.target.value; applyAllFilters(); });
+            document.getElementById('sortSelect').addEventListener('change', e => {
+                sortMode = e.target.value.includes('дешёвые') ? 'cheap' : e.target.value.includes('дорогие') ? 'expensive' : 'new';
+                applyAllFilters();
+            });
+            document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+                currentCategory = 'all';
+                document.querySelectorAll('#categoryList a').forEach(a => a.classList.remove('active'));
+                document.querySelector('#categoryList a[data-category="all"]').classList.add('active');
+                document.getElementById('priceFrom').value = 0;
+                document.getElementById('priceTo').value = 150000;
+                priceFrom = 0; priceTo = 150000;
+                document.getElementById('filterNew').checked = true;
+                document.getElementById('filterUsed').checked = true;
+                showNew = true; showUsed = true;
+                document.getElementById('citySelect').value = 'all';
+                selectedCity = 'all';
+                document.getElementById('sortSelect').selectedIndex = 0;
+                sortMode = 'new';
+                applyAllFilters();
+            });
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                clearTimeout(window.searchTimeout);
+                window.searchTimeout = setTimeout(() => {
+                    const query = e.target.value.toLowerCase();
+                    const base = getFilteredProducts();
+                    const filtered = query ? base.filter(p => p.title.toLowerCase().includes(query)) : base;
+                    grid.innerHTML = '';
+                    currentPage = 0; endReached = false;
+                    filteredList = filtered;
+                    sentinel.style.display = 'block';
+                    sentinel.textContent = 'Загрузка...';
+                    loadMore();
+                }, 300);
+            });
+
+            const overlay = document.getElementById('sidebarOverlay');
+            const sidebar = document.getElementById('sidebar');
+            const floatingTrigger = document.getElementById('floatingTrigger');
+            const inlineOpen = document.getElementById('inlineOpenBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+
+            function openSidebar() {
+                overlay.classList.add('active');
+                sidebar.classList.add('active');
+                floatingTrigger.classList.add('shifted');
+                document.body.style.overflow = 'hidden';
+            }
+            function closeSidebar() {
+                overlay.classList.remove('active');
+                sidebar.classList.remove('active');
+                floatingTrigger.classList.remove('shifted');
+                document.body.style.overflow = '';
+            }
+            floatingTrigger.addEventListener('click', openSidebar);
+            inlineOpen.addEventListener('click', openSidebar);
+            closeBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (modalOverlay.classList.contains('active')) {
+                        closeModal();
+                    } else if (sidebar.classList.contains('active')) {
+                        closeSidebar();
+                    }
+                }
+            });
+
+            let touchStartX = 0;
+            sidebar.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+            sidebar.addEventListener('touchend', (e) => {
+                if (e.changedTouches[0].screenX - touchStartX > 70) closeSidebar();
+            });
+
+            function updateFloatingPosition() {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
+                const minTop = 80, maxTop = window.innerHeight - 80 - floatingTrigger.offsetHeight;
+                floatingTrigger.style.top = (minTop + progress * (maxTop - minTop)) + 'px';
+                floatingTrigger.style.transform = 'translateY(0)';
+            }
+            window.addEventListener('scroll', updateFloatingPosition, { passive: true });
+            window.addEventListener('resize', updateFloatingPosition);
+            updateFloatingPosition();
+
+            resetAndLoad();
+        })();
+    </script>
+</body>
+</html>
