@@ -4,27 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет — SecondHand</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0c0f13;
-            --surface: #161a20;
-            --surface-light: #1e232b;
-            --text: #eef1f5;
-            --text-secondary: #8b929a;
-            --accent: #2dd4bf;
-            --accent-hover: #5ee8d4;
-            --accent-glow: rgba(45, 212, 191, 0.15);
-            --danger: #f87171;
-            --border: #272d35;
-            --radius: 18px;
-            --radius-sm: 12px;
+            --bg: #33423a;
+            --bg-deep: #26332c;
+            --surface: #3c4c42;
+            --surface-light: #445749;
+            --paper: #f6f1e2;
+            --paper-edge: #e2d6b3;
+            --text: #f3efe0;
+            --text-secondary: #aab5a4;
+            --ink: #2a2419;
+            --ink-soft: #6b6250;
+            --accent: #c1440e;
+            --accent-hover: #de5a20;
+            --accent-glow: rgba(193, 68, 14, 0.18);
+            --tape: #d9ab3f;
+            --danger: #a53a34;
+            --border: #4c5c50;
+            --radius: 4px;
+            --radius-sm: 3px;
             --transition: 0.2s ease;
+            --shadow: rgba(20, 16, 8, 0.45);
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: var(--bg); color: var(--text); line-height: 1.5;
+            background: var(--bg);
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text); line-height: 1.5;
             min-height: 100vh; -webkit-font-smoothing: antialiased;
             display: flex; align-items: center; justify-content: center;
             padding: 20px;
@@ -225,6 +237,55 @@
             .settings-grid { grid-template-columns: 1fr; }
             .save-btn { grid-column: span 1; }
         }
+
+        /* ==== Визуальный редизайн: доска объявлений ==== */
+        .user-details h1, .confirm-modal__title, .modal__title, .product-info h3 {
+            font-family: 'Permanent Marker', cursive;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+        .price, .fav-price, .modal__price {
+            font-family: 'Space Mono', monospace;
+            letter-spacing: -0.5px;
+        }
+        .btn, .icon-btn, .remove-fav, .tab {
+            border-radius: var(--radius-sm) !important;
+        }
+        .btn--accent { background: var(--accent); color: #fff8ec; }
+        .btn--accent:hover { background: var(--accent-hover); }
+        .btn--outline { border: 2px solid var(--border); color: var(--text); }
+        .btn--danger { background: rgba(165,58,52,0.15); color: #ff8f85; border: 1px solid rgba(165,58,52,0.4); }
+
+        .avatar { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+        .stat-item { background: var(--surface); }
+        .stat-number { color: var(--accent); font-family: 'Space Mono', monospace; }
+        .tab.active { background: var(--accent); color: #fff8ec; }
+
+        .product-card-item, .fav-card {
+            background: var(--paper);
+            color: var(--ink);
+            border: 1px solid var(--paper-edge);
+            box-shadow: 0 4px 10px var(--shadow);
+        }
+        .product-card-item .meta, .fav-title { color: var(--ink-soft); }
+        .product-image, .fav-emoji {
+            background: repeating-linear-gradient(135deg, #ece3c8, #ece3c8 10px, #e6dcbc 10px, #e6dcbc 20px);
+        }
+        .product-card__badge {
+            background: transparent; color: var(--accent); border: 2px solid var(--accent);
+            font-family: 'Space Mono', monospace; text-transform: uppercase; transform: rotate(-3deg);
+        }
+        .product-card__badge--used { color: var(--ink-soft); border-color: var(--ink-soft); }
+
+        .modal, .confirm-modal { background: var(--paper); color: var(--ink); border: 1px solid var(--paper-edge); }
+        .modal__meta, #modalDescription, .confirm-modal__message { color: var(--ink-soft); }
+        .modal__price { color: var(--accent); }
+
+        .form-group input {
+            background: var(--surface-light); color: var(--text);
+            border: 2px solid var(--border); border-radius: var(--radius-sm);
+        }
+        .form-group input:focus { border-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -333,6 +394,17 @@
             }
             loadFavorites();
 
+            // ---------- Объявления, добавленные пользователем на главной странице ----------
+            const USER_PRODUCTS_KEY = 'secondhand_userproducts';
+            function loadUserProducts() {
+                const saved = localStorage.getItem(USER_PRODUCTS_KEY);
+                return saved ? JSON.parse(saved) : [];
+            }
+            function saveUserProducts(list) {
+                localStorage.setItem(USER_PRODUCTS_KEY, JSON.stringify(list));
+            }
+            loadUserProducts().forEach(p => allProducts.unshift(p));
+
             // ---------- Confirm-модалка (замена confirm()) ----------
             const confirmModal = document.getElementById('confirmModal');
             const confirmIcon = document.getElementById('confirmIcon');
@@ -419,6 +491,12 @@
                     onConfirm: () => {
                         const ids = getMyProductIds().filter(pid => pid !== id);
                         saveMyProductIds(ids);
+                        // id > 60 — объявление создано пользователем (не из демо-каталога), удаляем насовсем
+                        if (id > 60) {
+                            saveUserProducts(loadUserProducts().filter(p => p.id !== id));
+                            const idx = allProducts.findIndex(p => p.id === id);
+                            if (idx !== -1) allProducts.splice(idx, 1);
+                        }
                         renderMyProducts();
                     }
                 });

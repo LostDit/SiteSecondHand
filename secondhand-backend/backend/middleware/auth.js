@@ -13,7 +13,6 @@ function auth(req, res, next) {
   }
 }
 
-// Не обязательная авторизация — если токен есть, подставит req.user, если нет — пропустит дальше
 function optionalAuth(req, res, next) {
   const header = req.headers.authorization;
   const token = header && header.split(' ')[1];

@@ -4,27 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecondHand — Современная доска объявлений</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0c0f13;
-            --surface: #161a20;
-            --surface-light: #1e232b;
-            --text: #eef1f5;
-            --text-secondary: #8b929a;
-            --accent: #2dd4bf;
-            --accent-hover: #5ee8d4;
-            --accent-glow: rgba(45, 212, 191, 0.15);
-            --danger: #f87171;
-            --border: #272d35;
-            --radius: 18px;
-            --radius-sm: 12px;
+            --bg: #33423a;
+            --bg-deep: #26332c;
+            --surface: #3c4c42;
+            --surface-light: #445749;
+            --paper: #f6f1e2;
+            --paper-edge: #e2d6b3;
+            --text: #f3efe0;
+            --text-secondary: #aab5a4;
+            --ink: #2a2419;
+            --ink-soft: #6b6250;
+            --accent: #c1440e;
+            --accent-hover: #de5a20;
+            --accent-glow: rgba(193, 68, 14, 0.18);
+            --tape: #d9ab3f;
+            --danger: #a53a34;
+            --border: #4c5c50;
+            --radius: 4px;
+            --radius-sm: 3px;
             --transition: 0.2s ease;
+            --shadow: rgba(20, 16, 8, 0.45);
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: var(--bg); color: var(--text); line-height: 1.5;
+            background: var(--bg);
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--text); line-height: 1.5;
             min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden;
         }
         :focus-visible {
@@ -159,6 +171,106 @@
         .modal__meta { color:var(--text-secondary); margin-bottom:16px; }
         .modal__actions { display:flex; gap:12px; flex-wrap:wrap; }
         .modal__actions .btn { flex:1; }
+
+        /* ---- Форма (используется модалкой «Подать объявление») ---- */
+        .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+        .form-group label { font-weight:600; font-size:0.85rem; color:var(--text-secondary); }
+        .form-group input, .form-group select, .form-group textarea {
+            padding:11px 14px; border:2px solid var(--border); border-radius:var(--radius-sm);
+            background:var(--surface-light); color:var(--text); outline:none; font-size:0.92rem; font-family:inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--accent); }
+        .form-row { display:flex; gap:12px; }
+        .form-row .form-group { flex:1; }
+        .form-error { color:var(--danger); font-size:0.85rem; margin:-6px 0 12px; min-height:1em; }
+
+        /* ==== Визуальный редизайн: доска объявлений ==== */
+        .main-title, .sidebar__brand, .modal__title {
+            font-family: 'Permanent Marker', cursive;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .product-card__price, .modal__price {
+            font-family: 'Space Mono', monospace;
+            letter-spacing: -0.5px;
+        }
+
+        .btn, .inline-trigger, .sort-select, .search-wrapper input {
+            border-radius: var(--radius-sm) !important;
+        }
+
+        .btn--accent {
+            background: var(--accent);
+            color: #fff8ec;
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn--accent:hover { background: var(--accent-hover); }
+        .btn--outline { border: 2px solid var(--border); color: var(--text); }
+
+        .search-wrapper input {
+            background: var(--paper);
+            color: var(--ink);
+            border: 2px solid var(--paper-edge);
+            font-family: 'Space Mono', monospace;
+        }
+        .search-icon { color: var(--ink-soft); }
+        .inline-trigger { background: var(--surface); border: 2px solid var(--border); }
+
+        .sidebar { background: var(--bg-deep); }
+        .sidebar__block { background: var(--surface); border: 1px dashed var(--tape); }
+        .sidebar__logo-icon { background: var(--accent); color: #fff8ec; font-family: 'Permanent Marker', cursive; }
+
+        .modal { background: var(--paper); color: var(--ink); border: 1px solid var(--paper-edge); }
+        .modal__meta, #modalDescription { color: var(--ink-soft); }
+        .modal__price { color: var(--accent); }
+
+        .product-card {
+            background: var(--paper);
+            color: var(--ink);
+            border: 1px solid var(--paper-edge);
+            box-shadow: 0 6px 14px var(--shadow);
+            position: relative;
+        }
+        .product-card:nth-child(3n+1) { transform: rotate(-1.1deg); }
+        .product-card:nth-child(3n+2) { transform: rotate(0.6deg); }
+        .product-card:nth-child(3n+3) { transform: rotate(-0.4deg); }
+        .product-card:hover {
+            transform: rotate(0deg) translateY(-6px);
+            box-shadow: 0 16px 28px var(--shadow);
+            border-color: var(--accent);
+            z-index: 2;
+        }
+        .product-card::before {
+            content: '';
+            position: absolute; top: -8px; left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 54px; height: 18px;
+            background: var(--tape);
+            opacity: 0.9;
+            box-shadow: 0 2px 4px var(--shadow);
+            z-index: 3;
+        }
+        .product-card__image {
+            background: repeating-linear-gradient(135deg, #ece3c8, #ece3c8 10px, #e6dcbc 10px, #e6dcbc 20px);
+        }
+        .product-card__title { color: var(--ink); }
+        .product-card__meta { color: var(--ink-soft); }
+        .product-card__badge {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+            transform: rotate(-3deg);
+            display: inline-block;
+        }
+        .product-card__badge--used { color: var(--ink-soft); border-color: var(--ink-soft); }
+        .product-card__favorite { background: var(--accent); color: #fff8ec; box-shadow: 0 2px 5px var(--shadow); }
+        .product-card__favorite:hover { background: var(--accent-hover); }
+        .product-card__favorite--active { background: var(--danger); }
     </style>
 </head>
 <body>
@@ -195,7 +307,7 @@
                 <div class="sidebar__logo-icon">SH</div> SecondHand
             </div>
             <div class="sidebar__actions">
-                <button class="btn btn--accent">+ Подать объявление</button>
+                <button class="btn btn--accent" id="postAdBtn">+ Подать объявление</button>
                 <a href="profile.html" class="btn btn--outline">♡ Избранное</a>
                 <button class="btn btn--outline">🔔 Уведомления <span class="badge" style="margin-left:auto; background:#e74c3c; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">3</span></button>
             </div>
@@ -257,6 +369,52 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="postAdModal" role="dialog" aria-modal="true" aria-label="Новое объявление">
+        <div class="modal">
+            <button class="modal__close" id="closePostAdBtn" aria-label="Закрыть">✕</button>
+            <div class="modal__title" style="margin-bottom:16px;">📌 Новое объявление</div>
+            <form id="postAdForm">
+                <div class="form-group">
+                    <label for="paTitle">Название</label>
+                    <input type="text" id="paTitle" required maxlength="80" placeholder="Например: iPhone 13 Pro">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paPrice">Цена, ₽</label>
+                        <input type="number" id="paPrice" required min="1" placeholder="15000">
+                    </div>
+                    <div class="form-group">
+                        <label for="paImage">Иконка</label>
+                        <input type="text" id="paImage" maxlength="4" placeholder="📦">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paCategory">Категория</label>
+                        <select id="paCategory" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paCondition">Состояние</label>
+                        <select id="paCondition" required>
+                            <option>Новое</option>
+                            <option>Б/У</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="paCity">Город</label>
+                    <select id="paCity" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="paDescription">Описание</label>
+                    <textarea id="paDescription" rows="3" maxlength="500" placeholder="Состояние, комплектация, причина продажи..."></textarea>
+                </div>
+                <div class="form-error" id="postAdError"></div>
+                <button type="submit" class="btn btn--accent" style="width:100%;">Опубликовать</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         (function() {
             const conditions = ['Новое', 'Б/У'];
@@ -291,6 +449,27 @@
                 localStorage.setItem('secondhand_favorites', JSON.stringify(favIds));
             }
             loadFavorites();
+
+            // ---------- Объявления, добавленные пользователем ----------
+            const USER_PRODUCTS_KEY = 'secondhand_userproducts';
+            const MY_PRODUCTS_KEY = 'secondhand_myproducts';
+
+            function loadUserProducts() {
+                const saved = localStorage.getItem(USER_PRODUCTS_KEY);
+                return saved ? JSON.parse(saved) : [];
+            }
+            function saveUserProducts(list) {
+                localStorage.setItem(USER_PRODUCTS_KEY, JSON.stringify(list));
+            }
+            function addToMyProducts(id) {
+                const saved = localStorage.getItem(MY_PRODUCTS_KEY);
+                const ids = saved ? JSON.parse(saved) : [3, 7, 12, 18, 25, 31, 44, 52];
+                ids.unshift(id);
+                localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(ids));
+            }
+
+            // подмешиваем ранее опубликованные пользователем объявления в общий список
+            loadUserProducts().forEach(p => allProducts.unshift(p));
 
             let currentCategory = 'all', priceFrom = 0, priceTo = 150000, showNew = true, showUsed = true, selectedCity = 'all', sortMode = 'new';
             const grid = document.getElementById('productsGrid');
@@ -533,6 +712,61 @@
             window.addEventListener('scroll', updateFloatingPosition, { passive: true });
             window.addEventListener('resize', updateFloatingPosition);
             updateFloatingPosition();
+
+            // ---------- Модалка «Подать объявление» ----------
+            const postAdModal = document.getElementById('postAdModal');
+            const postAdForm = document.getElementById('postAdForm');
+            const paCategory = document.getElementById('paCategory');
+            const paCity = document.getElementById('paCity');
+            const postAdError = document.getElementById('postAdError');
+
+            paCategory.innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+            paCity.innerHTML = locations.map(c => `<option>${c}</option>`).join('');
+
+            function openPostAdModal() {
+                postAdForm.reset();
+                postAdError.textContent = '';
+                postAdModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                document.getElementById('paTitle').focus();
+            }
+            function closePostAdModal() {
+                postAdModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+            document.getElementById('postAdBtn').addEventListener('click', () => { closeSidebar(); openPostAdModal(); });
+            document.getElementById('closePostAdBtn').addEventListener('click', closePostAdModal);
+            postAdModal.addEventListener('click', e => { if (e.target === postAdModal) closePostAdModal(); });
+
+            postAdForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('paTitle').value.trim();
+                const price = +document.getElementById('paPrice').value;
+                if (!title || !price || price <= 0) {
+                    postAdError.textContent = 'Заполните название и корректную цену';
+                    return;
+                }
+                const product = {
+                    id: Date.now(),
+                    title,
+                    price,
+                    image: document.getElementById('paImage').value.trim() || '📦',
+                    location: paCity.value,
+                    condition: document.getElementById('paCondition').value,
+                    category: paCategory.value,
+                    description: document.getElementById('paDescription').value.trim() || 'Описание не указано.',
+                    favorite: false
+                };
+                allProducts.unshift(product);
+                const stored = loadUserProducts();
+                stored.unshift(product);
+                saveUserProducts(stored);
+                addToMyProducts(product.id);
+
+                closePostAdModal();
+                applyAllFilters();
+                alert('Объявление опубликовано! Проверьте вкладку «Мои объявления» в профиле — оно появится и в общей ленте, если подходит под текущие фильтры.');
+            });
 
             resetAndLoad();
         })();

@@ -5,19 +5,22 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JSONFilePreset } = require('lowdb/node');
-const { auth, optionalAuth, SECRET } = require('./middleware/auth');
+const { auth, optionalAuth, SECRET } = require('./middleware/auth'); // ← путь исправлен
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Раздаём статику из корня проекта (там лежат index.html и profile.html)
+app.use(express.static(path.join(__dirname, '../')));
+
 let db;
 
 async function start() {
   db = await JSONFilePreset(path.join(__dirname, 'db.json'), { users: [], products: [], favorites: [] });
 
-  // ---------- Auth ----------
+  //Аутх
   app.post('/api/register', async (req, res) => {
     const { email, password, name } = req.body;
     if (!email || !password || !name) {
@@ -51,7 +54,7 @@ async function start() {
     res.json(safeUser);
   });
 
-  // ---------- Products ----------
+  //Товары
   app.get('/api/products', (req, res) => {
     let items = [...db.data.products];
     const { category, priceFrom, priceTo, condition, city, search, sort, page = 1, limit = 8 } = req.query;
@@ -126,7 +129,7 @@ async function start() {
     res.json(items);
   });
 
-  // ---------- Favorites ----------
+  //Товары в избранном
   app.get('/api/favorites', auth, (req, res) => {
     const favIds = db.data.favorites.filter(f => f.userId === req.user.id).map(f => f.productId);
     const items = db.data.products.filter(p => favIds.includes(p.id));
@@ -150,7 +153,12 @@ async function start() {
     res.json({ favorite: false });
   });
 
-  app.listen(PORT, () => console.log(`🚀 Сервер запущен: http://localhost:${PORT}`));
+  // Все остальные запросы скидываю на index.html чтобы работала навигация по ссылкам
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../index.html'));
+  });
+
+  app.listen(PORT, () => console.log(`Сервер запущен на: http://localhost:${PORT}`));
 }
 
 start();
