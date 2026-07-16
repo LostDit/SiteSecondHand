@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
+    <!-- Тост -->
+    <div class="toast" id="toast"></div>
+
     <div class="layout">
         <main class="main-content">
             <div class="main-top">
@@ -48,12 +51,13 @@
                 <button class="btn btn--accent" id="postAdBtn">+ Подать объявление</button>
                 <a href="profile.html" class="btn btn--outline">♡ Избранное</a>
                 <button class="btn btn--outline">🔔 Уведомления <span class="badge" style="margin-left:auto;">3</span></button>
-                <!-- Переключатель темы -->
                 <div class="theme-toggle">
                     <input type="checkbox" id="themeSwitch" aria-label="Тёмная тема">
                     <span>🌙 Тёмная тема</span>
                 </div>
             </div>
+
+            <!-- Категории -->
             <div class="sidebar__block">
                 <div class="sidebar__block-title">📂 Категории</div>
                 <ul class="sidebar__list" id="categoryList">
@@ -67,6 +71,8 @@
                     <li><a href="#" data-category="Для дома">Для дома</a></li>
                 </ul>
             </div>
+
+            <!-- Цена -->
             <div class="sidebar__block">
                 <div class="sidebar__block-title">💰 Цена, ₽</div>
                 <div class="price-range">
@@ -76,12 +82,17 @@
                 </div>
                 <button class="btn btn--accent" id="applyPriceBtn">Применить</button>
             </div>
+
+            <!-- Состояние -->
             <div class="sidebar__block">
                 <div class="sidebar__block-title">📦 Состояние</div>
                 <label class="checkbox-label"><input type="checkbox" id="filterNew" checked> Новое</label>
                 <label class="checkbox-label"><input type="checkbox" id="filterUsed" checked> Б/У</label>
+                <label class="checkbox-label"><input type="checkbox" id="filterUrgent"> 🔥 Срочно</label>
                 <button class="sidebar__reset" id="resetFiltersBtn">Сбросить все фильтры</button>
             </div>
+
+            <!-- Город -->
             <div class="sidebar__block">
                 <div class="sidebar__block-title">📍 Город</div>
                 <select class="sort-select" id="citySelect" style="width:100%;" aria-label="Выбор города">
@@ -93,12 +104,19 @@
                     <option>Новосибирск</option>
                 </select>
             </div>
-            <!-- Виджет цитаты -->
+
+            <!-- История просмотров -->
+            <div class="sidebar__block" id="historyBlock">
+                <div class="sidebar__block-title">🕒 Вы смотрели</div>
+                <div id="historyList"></div>
+            </div>
+
+            <!-- Цитата дня -->
             <div class="sidebar__block">
                 <div class="sidebar__block-title">📜 Цитата дня</div>
                 <div class="quote-widget" id="quoteWidget">
-                    <span id="quoteText">«Лучшая вещь — та, которой вы пользуетесь каждый день»</span>
-                    <span class="author" id="quoteAuthor">— народная мудрость</span>
+                    <span id="quoteText">«Упал - вставай, встал - упай  , дабуди дабудай чокопай»</span>
+                    <span class="author" id="quoteAuthor">— (с)Дмитрий Куликов</span>
                 </div>
             </div>
         </aside>
@@ -113,6 +131,34 @@
             <div class="modal__title" id="modalTitle"></div>
             <div class="modal__meta" id="modalMeta"></div>
             <p id="modalDescription" style="margin-bottom:16px; color:var(--text-secondary);"></p>
+
+            <!-- Похожие товары -->
+            <div id="similarProducts" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+                <div style="font-weight:600; margin-bottom:8px;">🔥 Похожие товары</div>
+                <div id="similarList"></div>
+            </div>
+
+            <!-- Рейтинг и отзывы -->
+            <div id="reviewsBlock" style="margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <span style="font-weight:600;">⭐ Рейтинг</span>
+                    <span id="avgRating" style="font-size:1.2rem;">0.0</span>
+                    <span style="color:var(--text-secondary);">(<span id="reviewsCount">0</span> отзывов)</span>
+                </div>
+                <div id="reviewsList" style="margin:8px 0; max-height:120px; overflow-y:auto; font-size:0.9rem;"></div>
+                <form id="reviewForm" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="reviewRating" style="padding:6px; border-radius:20px; background:var(--surface); color:var(--text); border:1px solid var(--border);">
+                        <option value="5">⭐ 5</option>
+                        <option value="4">⭐ 4</option>
+                        <option value="3">⭐ 3</option>
+                        <option value="2">⭐ 2</option>
+                        <option value="1">⭐ 1</option>
+                    </select>
+                    <input type="text" id="reviewText" placeholder="Ваш отзыв..." style="flex:1; padding:6px 12px; border-radius:20px; background:var(--surface); color:var(--text); border:1px solid var(--border);">
+                    <button type="submit" class="btn btn--accent" style="width:auto; padding:6px 16px;">Отправить</button>
+                </form>
+            </div>
+
             <div class="modal__actions">
                 <button class="btn btn--accent" id="contactSellerBtn">📞 Связаться</button>
                 <button class="btn btn--outline" id="modalFavoriteBtn">❤️ В избранное</button>
@@ -154,9 +200,15 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="paCity">Город</label>
-                    <select id="paCity" required></select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="paCity">Город</label>
+                        <select id="paCity" required></select>
+                    </div>
+                    <div class="form-group" style="flex:0 0 auto;">
+                        <label for="paUrgent">Срочно</label>
+                        <input type="checkbox" id="paUrgent">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="paDescription">Описание</label>
@@ -205,13 +257,21 @@
             });
 
             // ======================================================================
-            // 3. ВИДЖЕТ ЦИТАТЫ
+            // 3. ТОСТ
+            // ======================================================================
+            function showToast(message, duration = 2500) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                clearTimeout(toast._timeout);
+                toast._timeout = setTimeout(() => toast.classList.remove('show'), duration);
+            }
+
+            // ======================================================================
+            // 4. ВИДЖЕТ ЦИТАТЫ
             // ======================================================================
             const quotes = [
-                { text: "Лучшая вещь — та, которой вы пользуетесь каждый день", author: "народная мудрость" },
-                { text: "Покупайте вещи с историей, они хранят тепло", author: "Ре:Вещь" },
-                { text: "Секонхэнд — это экологично и стильно", author: "современный тренд" },
-                { text: "Каждая вещь заслуживает второй шанс", author: "девиз проекта" }
+                { text: "Упал - вставай, встал - упай, дабуди дабудай чокопай", author: "(c)Дмитрий Куликов"}
             ];
             const today = new Date().getDate();
             const quote = quotes[today % quotes.length];
@@ -219,7 +279,7 @@
             document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
 
             // ======================================================================
-            // 4. ТОВАРЫ (демо-данные + localStorage)
+            // 5. ТОВАРЫ (демо + localStorage)
             // ======================================================================
             const conditions = ['Новое', 'Б/У'];
             const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
@@ -237,7 +297,8 @@
                     condition: conditions[i % 2],
                     category: categories[i % categories.length],
                     description: 'Отличное состояние, полный комплект. Возможен небольшой торг. Причина продажи — покупка новой модели.',
-                    favorite: false
+                    favorite: false,
+                    urgent: false
                 });
             }
 
@@ -274,9 +335,124 @@
             loadUserProducts().forEach(p => allProducts.unshift(p));
 
             // ======================================================================
-            // 5. ФИЛЬТРЫ, СОРТИРОВКА, ПАГИНАЦИЯ
+            // 6. ИСТОРИЯ ПРОСМОТРОВ
             // ======================================================================
-            let currentCategory = 'all', priceFrom = 0, priceTo = 150000, showNew = true, showUsed = true, selectedCity = 'all', sortMode = 'new';
+            const HISTORY_KEY = 'viewHistory';
+            const MAX_HISTORY = 20;
+
+            function addToHistory(productId) {
+                let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                history = history.filter(id => id !== productId);
+                history.unshift(productId);
+                if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+                renderHistory();
+            }
+
+            function renderHistory() {
+                const container = document.getElementById('historyList');
+                if (!container) return;
+                const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                if (history.length === 0) {
+                    container.innerHTML = '<span style="color:var(--text-secondary); font-size:0.8rem;">Нет просмотров</span>';
+                    return;
+                }
+                const items = history.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
+                container.innerHTML = items.map(p => `
+                    <div class="history-item" data-id="${p.id}">
+                        <span class="emoji">${p.image}</span>
+                        <span class="title">${p.title}</span>
+                    </div>
+                `).join('');
+                container.querySelectorAll('.history-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const id = +el.dataset.id;
+                        const product = allProducts.find(p => p.id === id);
+                        if (product) openProductModal(product);
+                    });
+                });
+            }
+
+            // ======================================================================
+            // 7. ОТЗЫВЫ
+            // ======================================================================
+            function getReviews(productId) {
+                const key = `reviews_${productId}`;
+                return JSON.parse(localStorage.getItem(key) || '[]');
+            }
+            function saveReviews(productId, reviews) {
+                localStorage.setItem(`reviews_${productId}`, JSON.stringify(reviews));
+            }
+
+            function renderReviews(product) {
+                const reviews = getReviews(product.id);
+                const count = reviews.length;
+                const avg = count ? (reviews.reduce((sum, r) => sum + r.rating, 0) / count) : 0;
+                document.getElementById('avgRating').textContent = avg.toFixed(1);
+                document.getElementById('reviewsCount').textContent = count;
+                const list = document.getElementById('reviewsList');
+                if (count === 0) {
+                    list.innerHTML = '<span style="color:var(--text-secondary);">Пока нет отзывов</span>';
+                } else {
+                    list.innerHTML = reviews.slice(-5).reverse().map(r => `
+                        <div class="review-item">
+                            <span style="font-weight:600;">${'⭐'.repeat(r.rating)}</span>
+                            <span style="color:var(--text-secondary);">${r.text || ''}</span>
+                        </div>
+                    `).join('');
+                }
+                // Обработка формы
+                const form = document.getElementById('reviewForm');
+                form.onsubmit = (e) => {
+                    e.preventDefault();
+                    const rating = +document.getElementById('reviewRating').value;
+                    const text = document.getElementById('reviewText').value.trim();
+                    if (!text) { alert('Напишите отзыв'); return; }
+                    const newReview = { rating, text, date: new Date().toISOString() };
+                    const updated = [...reviews, newReview];
+                    saveReviews(product.id, updated);
+                    renderReviews(product);
+                    document.getElementById('reviewText').value = '';
+                    showToast('Спасибо за отзыв!');
+                };
+            }
+
+            // ======================================================================
+            // 8. ПОХОЖИЕ ТОВАРЫ
+            // ======================================================================
+            function renderSimilarProducts(product) {
+                const container = document.getElementById('similarList');
+                if (!container) return;
+                const similar = allProducts
+                    .filter(p => p.id !== product.id && p.category === product.category)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 4);
+                if (similar.length === 0) {
+                    container.innerHTML = '<span style="color:var(--text-secondary);">Нет похожих товаров</span>';
+                    return;
+                }
+                container.innerHTML = similar.map(p => `
+                    <div class="similar-item" data-id="${p.id}">
+                        <span class="emoji">${p.image}</span>
+                        <div class="info">
+                            <div class="title">${p.title}</div>
+                            <div class="price">${p.price.toLocaleString()} ₽</div>
+                        </div>
+                    </div>
+                `).join('');
+                container.querySelectorAll('.similar-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const id = +el.dataset.id;
+                        const product = allProducts.find(p => p.id === id);
+                        if (product) openProductModal(product);
+                    });
+                });
+            }
+
+            // ======================================================================
+            // 9. ФИЛЬТРЫ, СОРТИРОВКА, ПАГИНАЦИЯ
+            // ======================================================================
+            let currentCategory = 'all', priceFrom = 0, priceTo = 150000, showNew = true, showUsed = true, showUrgent = false, selectedCity = 'all', sortMode = 'new';
             const grid = document.getElementById('productsGrid');
             const sentinel = document.getElementById('sentinel');
 
@@ -286,6 +462,7 @@
                     if (p.price < priceFrom || p.price > priceTo) return false;
                     if (p.condition === 'Новое' && !showNew) return false;
                     if (p.condition === 'Б/У' && !showUsed) return false;
+                    if (showUrgent && !p.urgent) return false;
                     if (selectedCity !== 'all' && p.location !== selectedCity) return false;
                     return true;
                 }).sort((a,b) => {
@@ -319,13 +496,17 @@
                         isLoading = false;
                         return;
                     }
-                    // Вставляем карточки с анимацией (задержка для каждой)
                     chunk.forEach((p, index) => {
                         const card = document.createElement('div');
                         card.className = 'product-card';
                         card.dataset.id = p.id;
                         card.style.animationDelay = (index * 0.05) + 's';
+                        let urgentHTML = '';
+                        if (p.urgent) {
+                            urgentHTML = `<div class="product-card__urgent">🔥 Срочно</div>`;
+                        }
                         card.innerHTML = `
+                            ${urgentHTML}
                             <div class="product-card__image">${p.image}</div>
                             <button class="product-card__favorite ${p.favorite?'product-card__favorite--active':''}" data-action="favorite" data-id="${p.id}" aria-label="${p.favorite ? 'Удалить из избранного' : 'Добавить в избранное'}">${p.favorite?'❤️':'🤍'}</button>
                             <div class="product-card__body">
@@ -352,32 +533,9 @@
             observer.observe(sentinel);
 
             // ======================================================================
-            // 6. ОБРАБОТЧИКИ СОБЫТИЙ (клики, фильтры, поиск)
+            // 10. ОБРАБОТЧИКИ СОБЫТИЙ
             // ======================================================================
-            grid.addEventListener('click', e => {
-                const btn = e.target.closest('[data-action="favorite"]');
-                if (btn) {
-                    e.stopPropagation();
-                    const id = +btn.dataset.id;
-                    const prod = allProducts.find(p => p.id === id);
-                    if (prod) {
-                        prod.favorite = !prod.favorite;
-                        btn.innerHTML = prod.favorite ? '❤️' : '🤍';
-                        btn.classList.toggle('product-card__favorite--active', prod.favorite);
-                        btn.setAttribute('aria-label', prod.favorite ? 'Удалить из избранного' : 'Добавить в избранное');
-                        saveFavorites();
-                    }
-                    return;
-                }
-                const card = e.target.closest('.product-card');
-                if (card) {
-                    const id = +card.dataset.id;
-                    const product = allProducts.find(p => p.id === id);
-                    if (product) openProductModal(product);
-                }
-            });
-
-            // Модалка товара
+            // Модалка товара (общая)
             const modalOverlay = document.getElementById('productModal');
             const modalImage = document.getElementById('modalImage');
             const modalPrice = document.getElementById('modalPrice');
@@ -390,12 +548,18 @@
             function openProductModal(product) {
                 if (!product) return;
                 currentModalProduct = product;
+                addToHistory(product.id); // сохраняем историю
                 modalImage.textContent = product.image;
                 modalPrice.textContent = product.price.toLocaleString() + ' ₽';
                 modalTitle.textContent = product.title;
                 modalMeta.innerHTML = `<span class="product-card__badge ${product.condition==='Б/У'?'product-card__badge--used':''}">${product.condition}</span> 📍 ${product.location}`;
                 modalDescription.textContent = product.description;
                 modalFavoriteBtn.textContent = product.favorite ? '❤️ В избранном' : '🤍 Добавить в избранное';
+
+                // Похожие товары и отзывы
+                renderSimilarProducts(product);
+                renderReviews(product);
+
                 modalOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
                 document.getElementById('closeModalBtn').focus();
@@ -420,15 +584,41 @@
                         favBtn.classList.toggle('product-card__favorite--active', currentModalProduct.favorite);
                     }
                     saveFavorites();
+                    showToast(currentModalProduct.favorite ? 'Добавлено в избранное' : 'Убрано из избранного');
                 }
             });
 
             document.getElementById('contactSellerBtn').addEventListener('click', () => alert('Функция связи с продавцом появится позже (демо)'));
             document.getElementById('shareBtn').addEventListener('click', () => alert('Ссылка скопирована (демо)'));
 
+            // Клики по сетке (избранное и открытие)
+            grid.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="favorite"]');
+                if (btn) {
+                    e.stopPropagation();
+                    const id = +btn.dataset.id;
+                    const prod = allProducts.find(p => p.id === id);
+                    if (prod) {
+                        prod.favorite = !prod.favorite;
+                        btn.innerHTML = prod.favorite ? '❤️' : '🤍';
+                        btn.classList.toggle('product-card__favorite--active', prod.favorite);
+                        btn.setAttribute('aria-label', prod.favorite ? 'Удалить из избранного' : 'Добавить в избранное');
+                        saveFavorites();
+                        showToast(prod.favorite ? 'Добавлено в избранное' : 'Убрано из избранного');
+                    }
+                    return;
+                }
+                const card = e.target.closest('.product-card');
+                if (card) {
+                    const id = +card.dataset.id;
+                    const product = allProducts.find(p => p.id === id);
+                    if (product) openProductModal(product);
+                }
+            });
+
+            // Фильтры
             function applyAllFilters() { resetAndLoad(); }
 
-            // Категории
             document.getElementById('categoryList').addEventListener('click', e => {
                 e.preventDefault();
                 const link = e.target.closest('a');
@@ -439,27 +629,22 @@
                 applyAllFilters();
             });
 
-            // Цена
             document.getElementById('applyPriceBtn').addEventListener('click', () => {
                 priceFrom = +document.getElementById('priceFrom').value || 0;
                 priceTo = +document.getElementById('priceTo').value || Infinity;
                 applyAllFilters();
             });
 
-            // Состояние
             document.getElementById('filterNew').addEventListener('change', e => { showNew = e.target.checked; applyAllFilters(); });
             document.getElementById('filterUsed').addEventListener('change', e => { showUsed = e.target.checked; applyAllFilters(); });
-
-            // Город
+            document.getElementById('filterUrgent').addEventListener('change', e => { showUrgent = e.target.checked; applyAllFilters(); });
             document.getElementById('citySelect').addEventListener('change', e => { selectedCity = e.target.value; applyAllFilters(); });
 
-            // Сортировка
             document.getElementById('sortSelect').addEventListener('change', e => {
                 sortMode = e.target.value.includes('дешёвые') ? 'cheap' : e.target.value.includes('дорогие') ? 'expensive' : 'new';
                 applyAllFilters();
             });
 
-            // Сброс фильтров
             document.getElementById('resetFiltersBtn').addEventListener('click', () => {
                 currentCategory = 'all';
                 document.querySelectorAll('#categoryList a').forEach(a => a.classList.remove('active'));
@@ -469,7 +654,8 @@
                 priceFrom = 0; priceTo = 150000;
                 document.getElementById('filterNew').checked = true;
                 document.getElementById('filterUsed').checked = true;
-                showNew = true; showUsed = true;
+                document.getElementById('filterUrgent').checked = false;
+                showNew = true; showUsed = true; showUrgent = false;
                 document.getElementById('citySelect').value = 'all';
                 selectedCity = 'all';
                 document.getElementById('sortSelect').selectedIndex = 0;
@@ -477,7 +663,6 @@
                 applyAllFilters();
             });
 
-            // Поиск
             document.getElementById('searchInput').addEventListener('input', function(e) {
                 clearTimeout(window.searchTimeout);
                 window.searchTimeout = setTimeout(() => {
@@ -494,7 +679,7 @@
             });
 
             // ======================================================================
-            // 7. САЙДБАР (открытие/закрытие)
+            // 11. САЙДБАР
             // ======================================================================
             const overlay = document.getElementById('sidebarOverlay');
             const sidebar = document.getElementById('sidebar');
@@ -535,7 +720,6 @@
                 if (e.changedTouches[0].screenX - touchStartX > 70) closeSidebar();
             });
 
-            // Позиционирование плавающей кнопки при скролле
             function updateFloatingPosition() {
                 const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
                 const progress = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
@@ -548,7 +732,7 @@
             updateFloatingPosition();
 
             // ======================================================================
-            // 8. МОДАЛКА «ПОДАТЬ ОБЪЯВЛЕНИЕ»
+            // 12. МОДАЛКА «ПОДАТЬ ОБЪЯВЛЕНИЕ»
             // ======================================================================
             const postAdModal = document.getElementById('postAdModal');
             const postAdForm = document.getElementById('postAdForm');
@@ -591,7 +775,8 @@
                     condition: document.getElementById('paCondition').value,
                     category: paCategory.value,
                     description: document.getElementById('paDescription').value.trim() || 'Описание не указано.',
-                    favorite: false
+                    favorite: false,
+                    urgent: document.getElementById('paUrgent').checked
                 };
                 allProducts.unshift(product);
                 const stored = loadUserProducts();
@@ -601,12 +786,13 @@
 
                 closePostAdModal();
                 applyAllFilters();
-                alert('Объявление опубликовано! Проверьте вкладку «Мои объявления» в профиле — оно появится и в общей ленте, если подходит под текущие фильтры.');
+                showToast('Объявление опубликовано!');
             });
 
             // ======================================================================
-            // 9. ПЕРВИЧНАЯ ЗАГРУЗКА
+            // 13. ПЕРВИЧНАЯ ЗАГРУЗКА
             // ======================================================================
+            renderHistory();
             resetAndLoad();
 
             console.log('Главная страница загружена!');

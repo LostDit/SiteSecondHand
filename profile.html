@@ -10,12 +10,14 @@
     <link rel="stylesheet" href="css/profile.css">
 </head>
 <body>
+    <!-- Тост -->
+    <div class="toast" id="toast"></div>
+
     <div class="profile-card">
         <div class="profile-header">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; width:100%;">
                 <a href="index.html" class="back-link" title="На главную">←</a>
                 <div style="flex:1;"></div>
-                <!-- Переключатель темы -->
                 <div class="theme-toggle-profile">
                     <input type="checkbox" id="themeSwitchProfile" aria-label="Тёмная тема">
                     <span>🌙 Тёмная</span>
@@ -96,25 +98,25 @@
     <div class="modal-overlay" id="editProfileModal" role="dialog" aria-modal="true" aria-label="Редактирование профиля">
         <div class="modal">
             <button class="modal__close" id="closeEditProfileBtn" aria-label="Закрыть">✕</button>
-            <div class="modal__title" style="margin-bottom:16px;">✏️ Редактировать профиль</div>
+            <div class="modal__title" style="margin-bottom:20px;">✏️ Редактировать профиль</div>
             <form id="editProfileForm">
                 <div class="form-group">
                     <label for="editName">Имя</label>
-                    <input type="text" id="editName" required value="Алексей Смирнов">
+                    <input type="text" id="editName" required value="Алексей Смирнов" class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="editEmail">Email</label>
-                    <input type="email" id="editEmail" required value="alex@example.com">
+                    <input type="email" id="editEmail" required value="alex@example.com" class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="editCity">Город</label>
-                    <input type="text" id="editCity" value="Москва">
+                    <input type="text" id="editCity" value="Москва" class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="editAvatar">Аватар (эмодзи)</label>
-                    <input type="text" id="editAvatar" maxlength="4" placeholder="👤" value="👤">
+                    <input type="text" id="editAvatar" maxlength="4" placeholder="👤" value="👤" class="form-control">
                 </div>
-                <button type="submit" class="btn btn--accent" style="width:100%;">Сохранить</button>
+                <button type="submit" class="btn btn--accent" style="width:100%; margin-top:8px;">Сохранить</button>
             </form>
         </div>
     </div>
@@ -141,7 +143,18 @@
             });
 
             // ======================================================================
-            // 2. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (localStorage)
+            // 2. ТОСТ
+            // ======================================================================
+            function showToast(message, duration = 2500) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                clearTimeout(toast._timeout);
+                toast._timeout = setTimeout(() => toast.classList.remove('show'), duration);
+            }
+
+            // ======================================================================
+            // 3. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ
             // ======================================================================
             const USER_DATA_KEY = 'secondhand_userdata';
             let userData = loadUserData();
@@ -150,28 +163,24 @@
                 const saved = localStorage.getItem(USER_DATA_KEY);
                 return saved ? JSON.parse(saved) : { name: 'Алексей Смирнов', email: 'alex@example.com', city: 'Москва', avatar: '👤' };
             }
-
             function saveUserData(data) {
                 localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
             }
-
             function updateUserInterface() {
                 document.getElementById('userNameDisplay').textContent = userData.name;
                 document.getElementById('userEmailDisplay').textContent = userData.email;
                 document.getElementById('avatarPreview').textContent = userData.avatar;
-
                 document.getElementById('editName').value = userData.name;
                 document.getElementById('editEmail').value = userData.email;
                 document.getElementById('editCity').value = userData.city;
                 document.getElementById('editAvatar').value = userData.avatar;
-
                 document.getElementById('settingsName').value = userData.name;
                 document.getElementById('settingsEmail').value = userData.email;
                 document.getElementById('settingsCity').value = userData.city;
             }
 
             // ======================================================================
-            // 3. РЕДАКТИРОВАНИЕ ПРОФИЛЯ (модалка)
+            // 4. РЕДАКТИРОВАНИЕ ПРОФИЛЯ
             // ======================================================================
             const editProfileModal = document.getElementById('editProfileModal');
             const editProfileForm = document.getElementById('editProfileForm');
@@ -184,19 +193,16 @@
                 editProfileModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
             });
-
             document.getElementById('closeEditProfileBtn').addEventListener('click', () => {
                 editProfileModal.classList.remove('active');
                 document.body.style.overflow = '';
             });
-
             editProfileModal.addEventListener('click', (e) => {
                 if (e.target === editProfileModal) {
                     editProfileModal.classList.remove('active');
                     document.body.style.overflow = '';
                 }
             });
-
             editProfileForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 userData.name = document.getElementById('editName').value.trim() || userData.name;
@@ -207,21 +213,20 @@
                 updateUserInterface();
                 editProfileModal.classList.remove('active');
                 document.body.style.overflow = '';
-                alert('Профиль обновлён!');
+                showToast('Профиль обновлён!');
             });
 
-            // Сохранение из вкладки "Настройки"
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                 userData.name = document.getElementById('settingsName').value.trim() || userData.name;
                 userData.email = document.getElementById('settingsEmail').value.trim() || userData.email;
                 userData.city = document.getElementById('settingsCity').value.trim() || userData.city;
                 saveUserData(userData);
                 updateUserInterface();
-                alert('Настройки сохранены!');
+                showToast('Настройки сохранены!');
             });
 
             // ======================================================================
-            // 4. ТОВАРЫ (демо-данные + localStorage)
+            // 5. ТОВАРЫ
             // ======================================================================
             const conditions = ['Новое', 'Б/У'];
             const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
@@ -239,7 +244,8 @@
                     condition: conditions[i % 2],
                     category: categories[i % categories.length],
                     description: 'Отличное состояние, полный комплект. Возможен небольшой торг.',
-                    favorite: false
+                    favorite: false,
+                    urgent: false
                 });
             }
 
@@ -250,28 +256,24 @@
                     allProducts.forEach(p => { p.favorite = favIds.includes(p.id); });
                 }
             }
-
             function saveFavorites() {
                 const favIds = allProducts.filter(p => p.favorite).map(p => p.id);
                 localStorage.setItem('secondhand_favorites', JSON.stringify(favIds));
             }
             loadFavorites();
 
-            // Пользовательские объявления
             const USER_PRODUCTS_KEY = 'secondhand_userproducts';
-
             function loadUserProducts() {
                 const saved = localStorage.getItem(USER_PRODUCTS_KEY);
                 return saved ? JSON.parse(saved) : [];
             }
-
             function saveUserProducts(list) {
                 localStorage.setItem(USER_PRODUCTS_KEY, JSON.stringify(list));
             }
             loadUserProducts().forEach(p => allProducts.unshift(p));
 
             // ======================================================================
-            // 5. CONFIRM-МОДАЛКА
+            // 6. CONFIRM
             // ======================================================================
             const confirmModal = document.getElementById('confirmModal');
             const confirmIcon = document.getElementById('confirmIcon');
@@ -290,13 +292,11 @@
                 confirmModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
-
             function closeConfirm() {
                 confirmModal.classList.remove('active');
                 document.body.style.overflow = '';
                 confirmCallback = null;
             }
-
             confirmCancelBtn.addEventListener('click', closeConfirm);
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
             confirmOkBtn.addEventListener('click', () => {
@@ -316,10 +316,9 @@
             });
 
             // ======================================================================
-            // 6. МОИ ОБЪЯВЛЕНИЯ
+            // 7. МОИ ОБЪЯВЛЕНИЯ
             // ======================================================================
             const MY_PRODUCTS_KEY = 'secondhand_myproducts';
-
             function getMyProductIds() {
                 const saved = localStorage.getItem(MY_PRODUCTS_KEY);
                 if (saved) return JSON.parse(saved);
@@ -327,7 +326,6 @@
                 localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(defaults));
                 return defaults;
             }
-
             function saveMyProductIds(ids) {
                 localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(ids));
             }
@@ -370,17 +368,14 @@
                             if (idx !== -1) allProducts.splice(idx, 1);
                         }
                         renderMyProducts();
+                        showToast('Объявление снято');
                     }
                 });
             }
 
             myGrid.addEventListener('click', (e) => {
                 const removeBtn = e.target.closest('[data-action="remove"]');
-                if (removeBtn) {
-                    e.stopPropagation();
-                    removeMyProduct(+removeBtn.dataset.id);
-                    return;
-                }
+                if (removeBtn) { e.stopPropagation(); removeMyProduct(+removeBtn.dataset.id); return; }
                 const editBtn = e.target.closest('[data-action="edit"]');
                 if (editBtn) {
                     e.stopPropagation();
@@ -396,7 +391,7 @@
             });
 
             // ======================================================================
-            // 7. ИЗБРАННОЕ
+            // 8. ИЗБРАННОЕ
             // ======================================================================
             const favGrid = document.getElementById('favoritesGrid');
 
@@ -424,6 +419,7 @@
                     const prod = allProducts.find(p => p.id === id);
                     if (prod) prod.favorite = false;
                     renderFavorites();
+                    showToast('Убрано из избранного');
                     return;
                 }
                 const card = e.target.closest('.fav-card');
@@ -434,7 +430,7 @@
             });
 
             // ======================================================================
-            // 8. МОДАЛКА ТОВАРА (общая)
+            // 9. МОДАЛКА ТОВАРА
             // ======================================================================
             const modalOverlay = document.getElementById('productModal');
             const modalImage = document.getElementById('modalImage');
@@ -489,6 +485,7 @@
                     btn.textContent = currentModalProduct.favorite ? '❤️ В избранном' : '🤍 В избранное';
                     saveFavorites();
                     renderFavorites();
+                    showToast(currentModalProduct.favorite ? 'Добавлено в избранное' : 'Убрано из избранного');
                 } else if (action === 'contact') {
                     alert('Функция связи с продавцом появится позже (демо)');
                 } else if (action === 'share') {
@@ -503,7 +500,7 @@
             });
 
             // ======================================================================
-            // 9. КНОПКА «НАВЕРХ»
+            // 10. КНОПКА «НАВЕРХ»
             // ======================================================================
             const scrollBtn = document.createElement('button');
             scrollBtn.className = 'scroll-top';
@@ -524,7 +521,7 @@
             });
 
             // ======================================================================
-            // 10. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+            // 11. ВКЛАДКИ
             // ======================================================================
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
@@ -552,7 +549,7 @@
             });
 
             // ======================================================================
-            // 11. ESCAPE
+            // 12. ESCAPE
             // ======================================================================
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -566,7 +563,7 @@
             });
 
             // ======================================================================
-            // 12. ПЕРВИЧНЫЙ РЕНДЕР
+            // 13. ПЕРВИЧНЫЙ РЕНДЕР
             // ======================================================================
             updateUserInterface();
             renderMyProducts();
