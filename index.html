@@ -34,6 +34,8 @@
             <div class="sentinel" id="sentinel">Загрузка новых объявлений...</div>
         </main>
 
+        <!-- Кнопка "Наверх" -->
+        <button class="scroll-top" id="scrollTopBtn" aria-label="Наверх">↑</button>
         <div class="floating-trigger" id="floatingTrigger" aria-label="Открыть панель управления" title="Панель">🐼</div>
 
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -45,7 +47,12 @@
             <div class="sidebar__actions">
                 <button class="btn btn--accent" id="postAdBtn">+ Подать объявление</button>
                 <a href="profile.html" class="btn btn--outline">♡ Избранное</a>
-                <button class="btn btn--outline">🔔 Уведомления <span class="badge" style="margin-left:auto; background:#e74c3c; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">3</span></button>
+                <button class="btn btn--outline">🔔 Уведомления <span class="badge" style="margin-left:auto;">3</span></button>
+                <!-- Переключатель темы -->
+                <div class="theme-toggle">
+                    <input type="checkbox" id="themeSwitch" aria-label="Тёмная тема">
+                    <span>🌙 Тёмная тема</span>
+                </div>
             </div>
             <div class="sidebar__block">
                 <div class="sidebar__block-title">📂 Категории</div>
@@ -86,9 +93,18 @@
                     <option>Новосибирск</option>
                 </select>
             </div>
+            <!-- Виджет цитаты -->
+            <div class="sidebar__block">
+                <div class="sidebar__block-title">📜 Цитата дня</div>
+                <div class="quote-widget" id="quoteWidget">
+                    <span id="quoteText">«Лучшая вещь — та, которой вы пользуетесь каждый день»</span>
+                    <span class="author" id="quoteAuthor">— народная мудрость</span>
+                </div>
+            </div>
         </aside>
     </div>
 
+    <!-- Модалка товара -->
     <div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-label="Детали товара">
         <div class="modal">
             <button class="modal__close" id="closeModalBtn" aria-label="Закрыть">✕</button>
@@ -105,6 +121,7 @@
         </div>
     </div>
 
+    <!-- Модалка подачи объявления -->
     <div class="modal-overlay" id="postAdModal" role="dialog" aria-modal="true" aria-label="Новое объявление">
         <div class="modal">
             <button class="modal__close" id="closePostAdBtn" aria-label="Закрыть">✕</button>
@@ -153,10 +170,62 @@
 
     <script>
         (function() {
+            // ======================================================================
+            // 1. ТЁМНАЯ ТЕМА
+            // ======================================================================
+            const themeSwitch = document.getElementById('themeSwitch');
+            const body = document.body;
+            if (localStorage.getItem('theme') === 'dark') {
+                body.classList.add('dark-mode');
+                themeSwitch.checked = true;
+            }
+            themeSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // ======================================================================
+            // 2. КНОПКА «НАВЕРХ»
+            // ======================================================================
+            const scrollBtn = document.getElementById('scrollTopBtn');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    scrollBtn.classList.add('visible');
+                } else {
+                    scrollBtn.classList.remove('visible');
+                }
+            });
+            scrollBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // ======================================================================
+            // 3. ВИДЖЕТ ЦИТАТЫ
+            // ======================================================================
+            const quotes = [
+                { text: "Лучшая вещь — та, которой вы пользуетесь каждый день", author: "народная мудрость" },
+                { text: "Покупайте вещи с историей, они хранят тепло", author: "Ре:Вещь" },
+                { text: "Секонхэнд — это экологично и стильно", author: "современный тренд" },
+                { text: "Каждая вещь заслуживает второй шанс", author: "девиз проекта" }
+            ];
+            const today = new Date().getDate();
+            const quote = quotes[today % quotes.length];
+            document.getElementById('quoteText').textContent = `«${quote.text}»`;
+            document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+
+            // ======================================================================
+            // 4. ТОВАРЫ (демо-данные + localStorage)
+            // ======================================================================
             const conditions = ['Новое', 'Б/У'];
             const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
             const categories = ['Электроника', 'Одежда и обувь', 'Мебель', 'Детские товары', 'Спорт и отдых', 'Книги', 'Для дома'];
             const productNames = ['iPhone 13 Pro', 'Велосипед Stels', 'Диван угловой', 'Наушники Sony', 'Коляска Babyzen', 'Кроссовки Nike', 'Стол ИКЕА', 'Камера Canon', 'Книга Властелин колец', 'Гитара Yamaha', 'Пылесос Dyson', 'Куртка зимняя', 'Монитор LG', 'Кофемашина DeLonghi', 'Рюкзак Herschel'];
+
             const allProducts = [];
             for (let i = 1; i <= 60; i++) {
                 allProducts.push({
@@ -172,7 +241,6 @@
                 });
             }
 
-            // localStorage для избранного
             function loadFavorites() {
                 const saved = localStorage.getItem('secondhand_favorites');
                 if (saved) {
@@ -186,7 +254,7 @@
             }
             loadFavorites();
 
-            // ---------- Объявления, добавленные пользователем ----------
+            // Пользовательские объявления
             const USER_PRODUCTS_KEY = 'secondhand_userproducts';
             const MY_PRODUCTS_KEY = 'secondhand_myproducts';
 
@@ -203,10 +271,11 @@
                 ids.unshift(id);
                 localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(ids));
             }
-
-            // подмешиваем ранее опубликованные пользователем объявления в общий список
             loadUserProducts().forEach(p => allProducts.unshift(p));
 
+            // ======================================================================
+            // 5. ФИЛЬТРЫ, СОРТИРОВКА, ПАГИНАЦИЯ
+            // ======================================================================
             let currentCategory = 'all', priceFrom = 0, priceTo = 150000, showNew = true, showUsed = true, selectedCity = 'all', sortMode = 'new';
             const grid = document.getElementById('productsGrid');
             const sentinel = document.getElementById('sentinel');
@@ -250,8 +319,13 @@
                         isLoading = false;
                         return;
                     }
-                    grid.insertAdjacentHTML('beforeend', chunk.map(p => `
-                        <div class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="${p.title}, цена ${p.price} рублей">
+                    // Вставляем карточки с анимацией (задержка для каждой)
+                    chunk.forEach((p, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'product-card';
+                        card.dataset.id = p.id;
+                        card.style.animationDelay = (index * 0.05) + 's';
+                        card.innerHTML = `
                             <div class="product-card__image">${p.image}</div>
                             <button class="product-card__favorite ${p.favorite?'product-card__favorite--active':''}" data-action="favorite" data-id="${p.id}" aria-label="${p.favorite ? 'Удалить из избранного' : 'Добавить в избранное'}">${p.favorite?'❤️':'🤍'}</button>
                             <div class="product-card__body">
@@ -262,8 +336,9 @@
                                     <span>📍 ${p.location}</span>
                                 </div>
                             </div>
-                        </div>
-                    `).join(''));
+                        `;
+                        grid.appendChild(card);
+                    });
                     currentPage++;
                     isLoading = false;
                     sentinel.textContent = (currentPage * ITEMS_PER_PAGE >= filteredList.length) ? 'Вы просмотрели все объявления 🎉' : 'Загрузка новых объявлений...';
@@ -276,6 +351,9 @@
             }, { rootMargin: '120px' });
             observer.observe(sentinel);
 
+            // ======================================================================
+            // 6. ОБРАБОТЧИКИ СОБЫТИЙ (клики, фильтры, поиск)
+            // ======================================================================
             grid.addEventListener('click', e => {
                 const btn = e.target.closest('[data-action="favorite"]');
                 if (btn) {
@@ -299,6 +377,7 @@
                 }
             });
 
+            // Модалка товара
             const modalOverlay = document.getElementById('productModal');
             const modalImage = document.getElementById('modalImage');
             const modalPrice = document.getElementById('modalPrice');
@@ -309,7 +388,7 @@
             let currentModalProduct = null;
 
             function openProductModal(product) {
-                if (!product) return; // защита: не открываем модалку без товара
+                if (!product) return;
                 currentModalProduct = product;
                 modalImage.textContent = product.image;
                 modalPrice.textContent = product.price.toLocaleString() + ' ₽';
@@ -343,10 +422,13 @@
                     saveFavorites();
                 }
             });
+
             document.getElementById('contactSellerBtn').addEventListener('click', () => alert('Функция связи с продавцом появится позже (демо)'));
             document.getElementById('shareBtn').addEventListener('click', () => alert('Ссылка скопирована (демо)'));
 
             function applyAllFilters() { resetAndLoad(); }
+
+            // Категории
             document.getElementById('categoryList').addEventListener('click', e => {
                 e.preventDefault();
                 const link = e.target.closest('a');
@@ -356,18 +438,28 @@
                 currentCategory = link.dataset.category;
                 applyAllFilters();
             });
+
+            // Цена
             document.getElementById('applyPriceBtn').addEventListener('click', () => {
                 priceFrom = +document.getElementById('priceFrom').value || 0;
                 priceTo = +document.getElementById('priceTo').value || Infinity;
                 applyAllFilters();
             });
+
+            // Состояние
             document.getElementById('filterNew').addEventListener('change', e => { showNew = e.target.checked; applyAllFilters(); });
             document.getElementById('filterUsed').addEventListener('change', e => { showUsed = e.target.checked; applyAllFilters(); });
+
+            // Город
             document.getElementById('citySelect').addEventListener('change', e => { selectedCity = e.target.value; applyAllFilters(); });
+
+            // Сортировка
             document.getElementById('sortSelect').addEventListener('change', e => {
                 sortMode = e.target.value.includes('дешёвые') ? 'cheap' : e.target.value.includes('дорогие') ? 'expensive' : 'new';
                 applyAllFilters();
             });
+
+            // Сброс фильтров
             document.getElementById('resetFiltersBtn').addEventListener('click', () => {
                 currentCategory = 'all';
                 document.querySelectorAll('#categoryList a').forEach(a => a.classList.remove('active'));
@@ -384,6 +476,8 @@
                 sortMode = 'new';
                 applyAllFilters();
             });
+
+            // Поиск
             document.getElementById('searchInput').addEventListener('input', function(e) {
                 clearTimeout(window.searchTimeout);
                 window.searchTimeout = setTimeout(() => {
@@ -399,6 +493,9 @@
                 }, 300);
             });
 
+            // ======================================================================
+            // 7. САЙДБАР (открытие/закрытие)
+            // ======================================================================
             const overlay = document.getElementById('sidebarOverlay');
             const sidebar = document.getElementById('sidebar');
             const floatingTrigger = document.getElementById('floatingTrigger');
@@ -438,6 +535,7 @@
                 if (e.changedTouches[0].screenX - touchStartX > 70) closeSidebar();
             });
 
+            // Позиционирование плавающей кнопки при скролле
             function updateFloatingPosition() {
                 const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
                 const progress = maxScroll > 0 ? Math.min(window.scrollY / maxScroll, 1) : 0;
@@ -449,7 +547,9 @@
             window.addEventListener('resize', updateFloatingPosition);
             updateFloatingPosition();
 
-            // ---------- Модалка «Подать объявление» ----------
+            // ======================================================================
+            // 8. МОДАЛКА «ПОДАТЬ ОБЪЯВЛЕНИЕ»
+            // ======================================================================
             const postAdModal = document.getElementById('postAdModal');
             const postAdForm = document.getElementById('postAdForm');
             const paCategory = document.getElementById('paCategory');
@@ -504,7 +604,12 @@
                 alert('Объявление опубликовано! Проверьте вкладку «Мои объявления» в профиле — оно появится и в общей ленте, если подходит под текущие фильтры.');
             });
 
+            // ======================================================================
+            // 9. ПЕРВИЧНАЯ ЗАГРУЗКА
+            // ======================================================================
             resetAndLoad();
+
+            console.log('Главная страница загружена!');
         })();
     </script>
 </body>

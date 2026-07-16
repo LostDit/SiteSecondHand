@@ -21,8 +21,42 @@
     --radius-sm: 3px;
     --transition: 0.2s ease;
     --shadow: rgba(20, 16, 8, 0.45);
+    /* для тёмной темы переопределим ниже */
 }
 
+/* ===== ТЁМНАЯ ТЕМА ===== */
+body.dark-mode {
+    --bg: #1a1a1a;
+    --bg-deep: #111111;
+    --surface: #2a2a2a;
+    --surface-light: #3a3a3a;
+    --paper: #2f2f2f;
+    --paper-edge: #4a4a4a;
+    --text: #f0ece6;
+    --text-secondary: #b0b0b0;
+    --ink: #e8e0d4;
+    --ink-soft: #9a9288;
+    --border: #4a4a4a;
+    --shadow: rgba(0,0,0,0.7);
+    --accent-glow: rgba(193, 68, 14, 0.3);
+}
+
+/* Кастомный скроллбар */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+/* ===== Остальные общие стили (были) ===== */
 * {
     margin: 0;
     padding: 0;
@@ -39,6 +73,7 @@ body {
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
 }
 
 :focus-visible {
@@ -47,6 +82,113 @@ body {
     border-radius: 4px;
 }
 
+/* ===== КНОПКА «НАВЕРХ» ===== */
+.scroll-top {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    background: var(--accent);
+    color: #fff8ec;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px var(--shadow);
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+    transition: opacity 0.3s, transform 0.3s, background 0.2s;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.scroll-top.visible {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+.scroll-top:hover {
+    background: var(--accent-hover);
+}
+
+/* ===== АНИМАЦИЯ ПОЯВЛЕНИЯ КАРТОЧЕК ===== */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.product-card {
+    animation: fadeUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+/* ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (общий) ===== */
+.theme-toggle,
+.theme-toggle-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+.theme-toggle input[type="checkbox"],
+.theme-toggle-profile input[type="checkbox"] {
+    width: 44px;
+    height: 24px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 12px;
+    position: relative;
+    outline: none;
+    transition: background 0.3s;
+    flex-shrink: 0;
+}
+.theme-toggle input[type="checkbox"]::before,
+.theme-toggle-profile input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+.theme-toggle input[type="checkbox"]:checked,
+.theme-toggle-profile input[type="checkbox"]:checked {
+    background: var(--accent);
+}
+.theme-toggle input[type="checkbox"]:checked::before,
+.theme-toggle-profile input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+.theme-toggle span,
+.theme-toggle-profile span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ===== ВИДЖЕТ ЦИТАТЫ ===== */
+.quote-widget {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px dashed var(--tape);
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+.quote-widget .author {
+    display: block;
+    text-align: right;
+    margin-top: 8px;
+    font-weight: 500;
+    color: var(--text);
+    font-style: normal;
+}
 /* ===== Общие компоненты ===== */
 
 /* Кнопки */

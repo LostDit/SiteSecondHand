@@ -422,3 +422,20 @@ body {
         grid-column: span 1;
     }
 }
+
+/* Переключатель темы в шапке профиля */
+.theme-toggle-profile {
+    margin-left: auto;
+}
+
+/* Модалка редактирования профиля (использует стандартные стили модалок из default.css) */
+#editProfileModal .modal {
+    max-width: 450px;
+}
+
+/* Кнопка «Редактировать профиль» в шапке */
+.avatar-section .btn--outline {
+    font-size: 0.8rem;
+    padding: 4px 16px;
+    border-radius: 40px;
+}

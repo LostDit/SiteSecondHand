@@ -12,13 +12,22 @@
 <body>
     <div class="profile-card">
         <div class="profile-header">
-            <a href="index.html" class="back-link" title="На главную">←</a>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; width:100%;">
+                <a href="index.html" class="back-link" title="На главную">←</a>
+                <div style="flex:1;"></div>
+                <!-- Переключатель темы -->
+                <div class="theme-toggle-profile">
+                    <input type="checkbox" id="themeSwitchProfile" aria-label="Тёмная тема">
+                    <span>🌙 Тёмная</span>
+                </div>
+            </div>
             <div class="avatar-section">
                 <div class="avatar" id="avatarPreview" title="Сменить фото">👤</div>
                 <div class="user-details">
-                    <h1>Алексей Смирнов</h1>
-                    <p>alex@example.com</p>
+                    <h1 id="userNameDisplay">Алексей Смирнов</h1>
+                    <p id="userEmailDisplay">alex@example.com</p>
                     <p>⭐ 4.9 • На сайте с 2023</p>
+                    <button class="btn btn--outline" id="editProfileBtn" style="margin-top:8px; padding:4px 16px; font-size:0.8rem;">✏️ Редактировать профиль</button>
                 </div>
             </div>
             <div class="stats">
@@ -44,11 +53,11 @@
         </div>
         <div class="tab-content" id="settings-content">
             <div class="settings-grid">
-                <div class="form-group"><label>Имя</label><input type="text" value="Алексей Смирнов"></div>
-                <div class="form-group"><label>Email</label><input type="email" value="alex@example.com"></div>
-                <div class="form-group"><label>Город</label><input type="text" value="Москва"></div>
+                <div class="form-group"><label>Имя</label><input type="text" id="settingsName" value="Алексей Смирнов"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="settingsEmail" value="alex@example.com"></div>
+                <div class="form-group"><label>Город</label><input type="text" id="settingsCity" value="Москва"></div>
                 <div class="form-group"><label>Новый пароль</label><input type="password" placeholder="Оставьте пустым"></div>
-                <button class="save-btn" onclick="alert('Изменения сохранены (демо)')">💾 Сохранить</button>
+                <button class="save-btn" id="saveSettingsBtn">💾 Сохранить</button>
             </div>
         </div>
 
@@ -57,6 +66,7 @@
         </div>
     </div>
 
+    <!-- Модалка товара -->
     <div class="modal-overlay" id="productModal" role="dialog" aria-modal="true" aria-label="Детали товара">
         <div class="modal">
             <button class="modal__close" id="closeModalBtn" aria-label="Закрыть">✕</button>
@@ -69,6 +79,7 @@
         </div>
     </div>
 
+    <!-- Модалка подтверждения -->
     <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-label="Подтверждение">
         <div class="modal confirm-modal">
             <div class="confirm-modal__icon" id="confirmIcon">❓</div>
@@ -81,12 +92,142 @@
         </div>
     </div>
 
+    <!-- Модалка редактирования профиля -->
+    <div class="modal-overlay" id="editProfileModal" role="dialog" aria-modal="true" aria-label="Редактирование профиля">
+        <div class="modal">
+            <button class="modal__close" id="closeEditProfileBtn" aria-label="Закрыть">✕</button>
+            <div class="modal__title" style="margin-bottom:16px;">✏️ Редактировать профиль</div>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="editName">Имя</label>
+                    <input type="text" id="editName" required value="Алексей Смирнов">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" required value="alex@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="editCity">Город</label>
+                    <input type="text" id="editCity" value="Москва">
+                </div>
+                <div class="form-group">
+                    <label for="editAvatar">Аватар (эмодзи)</label>
+                    <input type="text" id="editAvatar" maxlength="4" placeholder="👤" value="👤">
+                </div>
+                <button type="submit" class="btn btn--accent" style="width:100%;">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         (function() {
+            // ======================================================================
+            // 1. ТЁМНАЯ ТЕМА
+            // ======================================================================
+            const themeSwitch = document.getElementById('themeSwitchProfile');
+            const body = document.body;
+            if (localStorage.getItem('theme') === 'dark') {
+                body.classList.add('dark-mode');
+                themeSwitch.checked = true;
+            }
+            themeSwitch.addEventListener('change', function() {
+                if (this.checked) {
+                    body.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // ======================================================================
+            // 2. ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (localStorage)
+            // ======================================================================
+            const USER_DATA_KEY = 'secondhand_userdata';
+            let userData = loadUserData();
+
+            function loadUserData() {
+                const saved = localStorage.getItem(USER_DATA_KEY);
+                return saved ? JSON.parse(saved) : { name: 'Алексей Смирнов', email: 'alex@example.com', city: 'Москва', avatar: '👤' };
+            }
+
+            function saveUserData(data) {
+                localStorage.setItem(USER_DATA_KEY, JSON.stringify(data));
+            }
+
+            function updateUserInterface() {
+                document.getElementById('userNameDisplay').textContent = userData.name;
+                document.getElementById('userEmailDisplay').textContent = userData.email;
+                document.getElementById('avatarPreview').textContent = userData.avatar;
+
+                document.getElementById('editName').value = userData.name;
+                document.getElementById('editEmail').value = userData.email;
+                document.getElementById('editCity').value = userData.city;
+                document.getElementById('editAvatar').value = userData.avatar;
+
+                document.getElementById('settingsName').value = userData.name;
+                document.getElementById('settingsEmail').value = userData.email;
+                document.getElementById('settingsCity').value = userData.city;
+            }
+
+            // ======================================================================
+            // 3. РЕДАКТИРОВАНИЕ ПРОФИЛЯ (модалка)
+            // ======================================================================
+            const editProfileModal = document.getElementById('editProfileModal');
+            const editProfileForm = document.getElementById('editProfileForm');
+
+            document.getElementById('editProfileBtn').addEventListener('click', () => {
+                document.getElementById('editName').value = userData.name;
+                document.getElementById('editEmail').value = userData.email;
+                document.getElementById('editCity').value = userData.city;
+                document.getElementById('editAvatar').value = userData.avatar;
+                editProfileModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+
+            document.getElementById('closeEditProfileBtn').addEventListener('click', () => {
+                editProfileModal.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+
+            editProfileModal.addEventListener('click', (e) => {
+                if (e.target === editProfileModal) {
+                    editProfileModal.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+
+            editProfileForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                userData.name = document.getElementById('editName').value.trim() || userData.name;
+                userData.email = document.getElementById('editEmail').value.trim() || userData.email;
+                userData.city = document.getElementById('editCity').value.trim() || userData.city;
+                userData.avatar = document.getElementById('editAvatar').value.trim() || '👤';
+                saveUserData(userData);
+                updateUserInterface();
+                editProfileModal.classList.remove('active');
+                document.body.style.overflow = '';
+                alert('Профиль обновлён!');
+            });
+
+            // Сохранение из вкладки "Настройки"
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                userData.name = document.getElementById('settingsName').value.trim() || userData.name;
+                userData.email = document.getElementById('settingsEmail').value.trim() || userData.email;
+                userData.city = document.getElementById('settingsCity').value.trim() || userData.city;
+                saveUserData(userData);
+                updateUserInterface();
+                alert('Настройки сохранены!');
+            });
+
+            // ======================================================================
+            // 4. ТОВАРЫ (демо-данные + localStorage)
+            // ======================================================================
             const conditions = ['Новое', 'Б/У'];
             const locations = ['Москва', 'Санкт-Петербург', 'Казань', 'Екатеринбург', 'Новосибирск'];
             const categories = ['Электроника', 'Одежда и обувь', 'Мебель', 'Детские товары', 'Спорт и отдых', 'Книги', 'Для дома'];
             const productNames = ['iPhone 13 Pro', 'Велосипед Stels', 'Диван угловой', 'Наушники Sony', 'Коляска Babyzen', 'Кроссовки Nike', 'Стол ИКЕА', 'Камера Canon', 'Книга Властелин колец', 'Гитара Yamaha', 'Пылесос Dyson', 'Куртка зимняя', 'Монитор LG', 'Кофемашина DeLonghi', 'Рюкзак Herschel'];
+
             const allProducts = [];
             for (let i = 1; i <= 60; i++) {
                 allProducts.push({
@@ -109,24 +250,29 @@
                     allProducts.forEach(p => { p.favorite = favIds.includes(p.id); });
                 }
             }
+
             function saveFavorites() {
                 const favIds = allProducts.filter(p => p.favorite).map(p => p.id);
                 localStorage.setItem('secondhand_favorites', JSON.stringify(favIds));
             }
             loadFavorites();
 
-            // ---------- Объявления, добавленные пользователем на главной странице ----------
+            // Пользовательские объявления
             const USER_PRODUCTS_KEY = 'secondhand_userproducts';
+
             function loadUserProducts() {
                 const saved = localStorage.getItem(USER_PRODUCTS_KEY);
                 return saved ? JSON.parse(saved) : [];
             }
+
             function saveUserProducts(list) {
                 localStorage.setItem(USER_PRODUCTS_KEY, JSON.stringify(list));
             }
             loadUserProducts().forEach(p => allProducts.unshift(p));
 
-            // ---------- Confirm-модалка (замена confirm()) ----------
+            // ======================================================================
+            // 5. CONFIRM-МОДАЛКА
+            // ======================================================================
             const confirmModal = document.getElementById('confirmModal');
             const confirmIcon = document.getElementById('confirmIcon');
             const confirmTitleEl = document.getElementById('confirmTitle');
@@ -144,11 +290,13 @@
                 confirmModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
             }
+
             function closeConfirm() {
                 confirmModal.classList.remove('active');
                 document.body.style.overflow = '';
                 confirmCallback = null;
             }
+
             confirmCancelBtn.addEventListener('click', closeConfirm);
             confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
             confirmOkBtn.addEventListener('click', () => {
@@ -167,8 +315,11 @@
                 });
             });
 
-            // ---------- Мои объявления (динамически, хранятся в localStorage) ----------
+            // ======================================================================
+            // 6. МОИ ОБЪЯВЛЕНИЯ
+            // ======================================================================
             const MY_PRODUCTS_KEY = 'secondhand_myproducts';
+
             function getMyProductIds() {
                 const saved = localStorage.getItem(MY_PRODUCTS_KEY);
                 if (saved) return JSON.parse(saved);
@@ -176,6 +327,7 @@
                 localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(defaults));
                 return defaults;
             }
+
             function saveMyProductIds(ids) {
                 localStorage.setItem(MY_PRODUCTS_KEY, JSON.stringify(ids));
             }
@@ -212,7 +364,6 @@
                     onConfirm: () => {
                         const ids = getMyProductIds().filter(pid => pid !== id);
                         saveMyProductIds(ids);
-                        // id > 60 — объявление создано пользователем (не из демо-каталога), удаляем насовсем
                         if (id > 60) {
                             saveUserProducts(loadUserProducts().filter(p => p.id !== id));
                             const idx = allProducts.findIndex(p => p.id === id);
@@ -225,8 +376,11 @@
 
             myGrid.addEventListener('click', (e) => {
                 const removeBtn = e.target.closest('[data-action="remove"]');
-                if (removeBtn) { e.stopPropagation(); removeMyProduct(+removeBtn.dataset.id); return; }
-
+                if (removeBtn) {
+                    e.stopPropagation();
+                    removeMyProduct(+removeBtn.dataset.id);
+                    return;
+                }
                 const editBtn = e.target.closest('[data-action="edit"]');
                 if (editBtn) {
                     e.stopPropagation();
@@ -234,7 +388,6 @@
                     if (product) openProductModal(product, 'own');
                     return;
                 }
-
                 const card = e.target.closest('.product-card-item');
                 if (card) {
                     const product = allProducts.find(p => p.id === +card.dataset.id);
@@ -242,7 +395,9 @@
                 }
             });
 
-            // ---------- Избранное ----------
+            // ======================================================================
+            // 7. ИЗБРАННОЕ
+            // ======================================================================
             const favGrid = document.getElementById('favoritesGrid');
 
             function renderFavorites() {
@@ -278,7 +433,9 @@
                 }
             });
 
-            // ---------- Общее модальное окно товара (как на главной) ----------
+            // ======================================================================
+            // 8. МОДАЛКА ТОВАРА (общая)
+            // ======================================================================
             const modalOverlay = document.getElementById('productModal');
             const modalImage = document.getElementById('modalImage');
             const modalPrice = document.getElementById('modalPrice');
@@ -289,7 +446,7 @@
             let currentModalProduct = null;
 
             function openProductModal(product, context = 'public') {
-                if (!product) return; // защита от пустого товара
+                if (!product) return;
                 currentModalProduct = product;
                 modalImage.textContent = product.image;
                 modalPrice.textContent = product.price.toLocaleString() + ' ₽';
@@ -345,12 +502,33 @@
                 }
             });
 
-            // ---------- Аватар ----------
-            document.getElementById('avatarPreview').addEventListener('click', () => alert('Смена фото появится позже (демо)'));
+            // ======================================================================
+            // 9. КНОПКА «НАВЕРХ»
+            // ======================================================================
+            const scrollBtn = document.createElement('button');
+            scrollBtn.className = 'scroll-top';
+            scrollBtn.id = 'scrollTopBtnProfile';
+            scrollBtn.innerHTML = '↑';
+            scrollBtn.setAttribute('aria-label', 'Наверх');
+            document.body.appendChild(scrollBtn);
 
-            // ---------- Переключение вкладок с индикатором загрузки ----------
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    scrollBtn.classList.add('visible');
+                } else {
+                    scrollBtn.classList.remove('visible');
+                }
+            });
+            scrollBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // ======================================================================
+            // 10. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+            // ======================================================================
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
+
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     if (tab.classList.contains('active')) return;
@@ -358,8 +536,8 @@
                     tabs.forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
                     contents.forEach(c => c.classList.remove('active', 'is-loading'));
-                    const targetContent = document.getElementById(target + '-content');
 
+                    const targetContent = document.getElementById(target + '-content');
                     if (target === 'products' || target === 'favorites') {
                         targetContent.classList.add('active', 'is-loading');
                         setTimeout(() => {
@@ -373,17 +551,28 @@
                 });
             });
 
-            // ---------- Escape закрывает открытую модалку ----------
+            // ======================================================================
+            // 11. ESCAPE
+            // ======================================================================
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     if (confirmModal.classList.contains('active')) closeConfirm();
                     else if (modalOverlay.classList.contains('active')) closeModal();
+                    else if (editProfileModal.classList.contains('active')) {
+                        editProfileModal.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
                 }
             });
 
-            // ---------- Первичный рендер ----------
+            // ======================================================================
+            // 12. ПЕРВИЧНЫЙ РЕНДЕР
+            // ======================================================================
+            updateUserInterface();
             renderMyProducts();
             renderFavorites();
+
+            console.log('Профиль успешно загружен!');
         })();
     </script>
 </body>
