@@ -1,0 +1,424 @@
+/* ===== profile.css – стили только для страницы профиля ===== */
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.profile-card {
+    width: 100%;
+    max-width: 1000px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Шапка профиля */
+.profile-header {
+    position: relative;
+    padding: 32px 32px 20px;
+    background: linear-gradient(135deg, #1a2a2f 0%, #0f171d 100%);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.back-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+.back-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--accent);
+}
+.avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+    min-width: 200px;
+}
+.avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #1e2d33, #151f26);
+    border: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.avatar:hover {
+    filter: brightness(1.2);
+}
+.user-details h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Permanent Marker', cursive;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+.user-details p {
+    color: var(--text-secondary);
+    margin: 4px 0;
+}
+.stats {
+    display: flex;
+    gap: 24px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+.stat-item {
+    text-align: center;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+}
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+}
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+/* Вкладки */
+.tabs-container {
+    display: flex;
+    gap: 4px;
+    padding: 12px 24px;
+    background: var(--surface-light);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+}
+.tab {
+    padding: 10px 22px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+.tab:not(.active):hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+}
+.tab.active {
+    background: var(--accent);
+    color: #fff8ec;
+}
+
+.tab-content {
+    padding: 24px;
+    display: none;
+    animation: fadeSlide 0.3s ease;
+    position: relative;
+}
+.tab-content.active {
+    display: block;
+}
+@keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    z-index: 5;
+}
+.tab-content.is-loading .loading-overlay {
+    display: flex;
+}
+.tab-content.is-loading > *:not(.loading-overlay) {
+    visibility: hidden;
+}
+
+/* Мои объявления (в профиле) */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+.product-card-item {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper-edge);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    transition: var(--transition);
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--shadow);
+}
+.product-card-item:hover {
+    border-color: var(--border);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+}
+.product-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    background: repeating-linear-gradient(135deg, #ece3c8, #ece3c8 10px, #e6dcbc 10px, #e6dcbc 20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    flex-shrink: 0;
+}
+.product-info {
+    flex: 1;
+    min-width: 0;
+}
+.product-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Permanent Marker', cursive;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+.price {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: -0.5px;
+}
+.meta {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+.actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.icon-btn:hover {
+    background: var(--border);
+    color: #fff;
+}
+.icon-btn.danger:hover {
+    background: rgba(248,113,113,0.2);
+    color: var(--danger);
+}
+
+/* Избранное (в профиле) */
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+.fav-card {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper-edge);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    box-shadow: 0 4px 10px var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.fav-card:hover {
+    border-color: var(--border);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.4);
+}
+.fav-emoji {
+    font-size: 2.5rem;
+    background: repeating-linear-gradient(135deg, #ece3c8, #ece3c8 10px, #e6dcbc 10px, #e6dcbc 20px);
+    border-radius: 10px;
+    padding: 8px;
+}
+.fav-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+}
+.fav-price {
+    color: var(--accent);
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: -0.5px;
+}
+.remove-fav {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+.remove-fav:hover {
+    background: rgba(248,113,113,0.2);
+    color: var(--danger);
+}
+
+/* Настройки */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-group label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+.form-group input {
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-light);
+    color: var(--text);
+    outline: none;
+    font-size: 0.95rem;
+}
+.form-group input:focus {
+    border-color: var(--accent);
+}
+.save-btn {
+    grid-column: span 2;
+    justify-self: start;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 40px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.save-btn:hover {
+    background: var(--accent-hover);
+}
+
+.logout-section {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 24px 24px;
+}
+.btn-logout {
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--danger);
+    padding: 10px 22px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-logout:hover {
+    background: rgba(248,113,113,0.2);
+}
+
+/* Стили для модалки подтверждения (переопределение modal) */
+.confirm-modal {
+    max-width: 360px;
+    text-align: center;
+}
+.confirm-modal__icon {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+}
+.confirm-modal__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-family: 'Permanent Marker', cursive;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+.confirm-modal__message {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+.confirm-modal__actions {
+    display: flex;
+    gap: 10px;
+}
+.confirm-modal__actions .btn {
+    flex: 1;
+}
+
+/* Адаптив */
+@media (max-width: 700px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .stats {
+        margin-left: 0;
+        width: 100%;
+        justify-content: space-around;
+    }
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+    .save-btn {
+        grid-column: span 1;
+    }
+}
